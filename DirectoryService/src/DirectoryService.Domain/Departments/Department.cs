@@ -1,4 +1,6 @@
 ﻿using System.Text.RegularExpressions;
+using DirectoryService.Domain.DepartmentLocations;
+using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Shared;
 
@@ -8,7 +10,9 @@ public class Department
 {
     private readonly List<Department> _children = [];
 
-    private readonly List<Location> _locations;
+    private readonly List<DepartmentLocation> _locations;
+
+    private readonly List<DepartmentPosition> _positions;
 
     public Guid Id { get; private set; }
 
@@ -30,10 +34,14 @@ public class Department
 
     public IReadOnlyList<Department> Children => _children;
 
-    public IReadOnlyList<Location> Locations => _locations;
+    public IReadOnlyList<DepartmentLocation> DepartmentLocations => _locations;
+
+    public IReadOnlyList<DepartmentPosition> DepartmentPositions => _positions;
 
     private Department(DepartmentName name, string identifier, Department? parent, string path,
-        short depth, bool isActive, DateTime createdAt, DateTime? updatedAt, List<Location> locations)
+        short depth, bool isActive, DateTime createdAt, DateTime? updatedAt,
+        IEnumerable<DepartmentLocation> locations,
+        IEnumerable<DepartmentPosition> positions)
     {
         Id = Guid.NewGuid();
         Name = name;
@@ -44,21 +52,24 @@ public class Department
         IsActive = isActive;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
-        _locations = locations;
+        _locations = locations.ToList();
+        _positions = positions.ToList();
     }
 
     public static Result<Department> Create(DepartmentName name, string identifier, Department? parent,
-        bool isActive, DateTime createdAt, DateTime? updatedAt,  List<Location> locations)
+        bool isActive, DateTime createdAt, DateTime? updatedAt,
+        IEnumerable<DepartmentLocation> locations,
+        IEnumerable<DepartmentPosition> positions)
     {
         if (!Regex.IsMatch(identifier, "[a-zA-Z]{3,150}"))
             return Result<Department>.Failure("Invalid identifier");
         if (createdAt > DateTime.Now)
             return Result<Department>.Failure("Date of create must be less than current date");
-        if (locations.Count == 0)
+        if (!locations.Any())
             return Result<Department>.Failure("Department must have at least one location");
         string path = parent is null ? identifier : $"{parent.Path}.{identifier}";
         return Result<Department>.Success(new Department(
             name, identifier, parent, path, Convert.ToInt16((parent?.Depth ?? 0) + 1),
-            isActive, createdAt.ToUniversalTime(), updatedAt?.ToUniversalTime(), locations));
+            isActive, createdAt.ToUniversalTime(), updatedAt?.ToUniversalTime(), locations, positions));
     }
 }
