@@ -4,7 +4,7 @@ namespace DirectoryService.Domain.Positions;
 
 public class Position
 {
-    public Guid Id { get; set; }
+    public PositionId Id { get; set; }
 
     public PositionName Name { get; set; }
 
@@ -16,9 +16,12 @@ public class Position
 
     public DateTime? UpdatedAt { get; set; }
 
+    // EF Core
+    private Position() { }
+
     private Position(PositionName name, string? description, bool isActive, DateTime createdAt, DateTime? updatedAt)
     {
-        Id = Guid.NewGuid();
+        Id = new PositionId(Guid.NewGuid());
         Name = name;
         Description = description;
         IsActive = isActive;

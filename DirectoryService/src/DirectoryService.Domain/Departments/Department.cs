@@ -14,11 +14,13 @@ public class Department
 
     private readonly List<DepartmentPosition> _positions;
 
-    public Guid Id { get; private set; }
+    public DepartmentId Id { get; private set; }
 
     public DepartmentName Name { get; private set; }
 
     public string Identifier { get; private set; }
+
+    public DepartmentId? ParentId { get; private set; }
 
     public Department? Parent { get; private set; }
 
@@ -38,12 +40,15 @@ public class Department
 
     public IReadOnlyList<DepartmentPosition> DepartmentPositions => _positions;
 
+    // EF Core
+    private Department() { }
+
     private Department(DepartmentName name, string identifier, Department? parent, string path,
         short depth, bool isActive, DateTime createdAt, DateTime? updatedAt,
         IEnumerable<DepartmentLocation> locations,
         IEnumerable<DepartmentPosition> positions)
     {
-        Id = Guid.NewGuid();
+        Id = new DepartmentId(Guid.NewGuid());
         Name = name;
         Identifier = identifier;
         Parent = parent;

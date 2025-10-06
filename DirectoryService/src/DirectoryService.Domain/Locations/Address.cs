@@ -17,6 +17,9 @@ public record Address
 
     public string? Apartment { get; }
 
+    // EF Core
+    private Address() { }
+
     private Address(string postalCode, string region, string city, string street, string house, string? apartment)
     {
         PostalCode = postalCode;
