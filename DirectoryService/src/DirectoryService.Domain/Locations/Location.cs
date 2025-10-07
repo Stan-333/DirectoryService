@@ -4,7 +4,7 @@ namespace DirectoryService.Domain.Locations;
 
 public class Location
 {
-    public Guid Id { get; private set; }
+    public LocationId Id { get; private set; }
 
     public LocationName Name { get; private set; }
 
@@ -18,10 +18,13 @@ public class Location
 
     public DateTime? UpdatedAt { get; private set; }
 
+    // EF Core
+    private Location() { }
+
     private Location(LocationName name, Address address, TimeZone timezone,
         bool isActive, DateTime createdAt, DateTime? updatedAt)
     {
-        Id = Guid.NewGuid();
+        Id = new LocationId(Guid.NewGuid());
         Name = name;
         Address = address;
         Timezone = timezone;
