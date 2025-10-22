@@ -1,4 +1,5 @@
-﻿using DirectoryService.Domain.DepartmentLocations;
+﻿using DirectoryService.Application;
+using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
@@ -26,7 +27,6 @@ public class DirectoryServiceDbContext(IConfiguration configuration) : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(configuration.GetConnectionString(DATABASE));
-        /*optionsBuilder.UseSnakeCaseNamingConvention();*/
         optionsBuilder.UseLoggerFactory(CreateLoggerFactory());
     }
 
