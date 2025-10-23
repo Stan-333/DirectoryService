@@ -2,6 +2,7 @@
 
 public readonly struct LengthConstants
 {
+    public const int LENGTH3 = 3;
     public const int LENGTH6 = 6;
     public const int LENGTH10 = 10;
     public const int LENGTH100 = 100;
