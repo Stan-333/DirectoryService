@@ -1,7 +1,10 @@
-﻿using DirectoryService.Contracts.Locations;
+﻿using DirectoryService.Application.Extensions;
+using DirectoryService.Application.Locations.Fails.Exceptions;
+using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain.Locations;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using Shared;
 using TimeZone = DirectoryService.Domain.Locations.TimeZone;
 
 namespace DirectoryService.Application.Locations.CreateLocation;
@@ -26,7 +29,9 @@ public class CreateLocationHandler
     {
         var validationResult = await _validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
+        {
+            throw new LocationValidationException(validationResult.ToErrors());
+        }
 
         var location = Location.Create(
             LocationName.Create(request.Name).Value,
