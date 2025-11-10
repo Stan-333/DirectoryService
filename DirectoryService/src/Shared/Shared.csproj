@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="CSharpFunctionalExtensions" Version="3.6.0" />
+      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
       <PackageReference Include="TimeZoneConverter" Version="7.2.0" />
     </ItemGroup>
 
