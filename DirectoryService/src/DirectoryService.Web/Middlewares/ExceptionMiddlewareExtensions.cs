@@ -1,4 +1,4 @@
-﻿namespace DirectoryService.Web.Middlewares;
+﻿namespace DirectoryService.web.Middlewares;
 
 /// <summary>
 /// Применение middleware

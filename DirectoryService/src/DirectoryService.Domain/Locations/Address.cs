@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
-using DirectoryService.Domain.Shared;
+using CSharpFunctionalExtensions;
+using Shared;
 
 namespace DirectoryService.Domain.Locations;
 
@@ -30,33 +31,33 @@ public record Address
         Apartment = apartment;
     }
 
-    public static Result<Address> Create(string postalCode, string region, string city, string street, string house, string? apartment = null)
+    public static Result<Address, Error> Create(string postalCode, string region, string city, string street, string house, string? apartment = null)
     {
         if (string.IsNullOrWhiteSpace(postalCode))
-            return Result<Address>.Failure("Индекс обязателен.");
+            return GeneralErrors.ValueIsRequired("postal code");
 
         if (!Regex.IsMatch(postalCode, @"^\d{6}"))
-            return Result<Address>.Failure("Индекс должен состоять из 6 цифр.");
+            return GeneralErrors.ValueIsInvalid("postal code");
 
         if (string.IsNullOrWhiteSpace(region))
-            return Result<Address>.Failure("Регион обязателен.");
+            return GeneralErrors.ValueIsRequired("region");
 
         if (string.IsNullOrWhiteSpace(city))
-            return Result<Address>.Failure("Город обязателен.");
+            return GeneralErrors.ValueIsRequired("city");
 
         if (string.IsNullOrWhiteSpace(street))
-            return Result<Address>.Failure("Улица обязательна.");
+            return GeneralErrors.ValueIsRequired("street");
 
         if (string.IsNullOrWhiteSpace(house))
-            return Result<Address>.Failure("Дом обязателен.");
+            return GeneralErrors.ValueIsRequired("house");
 
-        return Result<Address>.Success(new Address(
+        return new Address(
             postalCode.Trim(),
             region.Trim(),
             city.Trim(),
             street.Trim(),
             house.Trim(),
-            apartment?.Trim()));
+            apartment?.Trim());
     }
 
     public override string ToString()

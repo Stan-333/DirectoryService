@@ -1,4 +1,6 @@
+using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Shared;
+using Shared;
 
 namespace DirectoryService.Domain.Departments;
 
@@ -8,10 +10,12 @@ public record DepartmentName
 
     private DepartmentName(string value) => Value = value;
 
-    public static Result<DepartmentName> Create(string value)
+    public static Result<DepartmentName, Error> Create(string value)
     {
-        if (string.IsNullOrWhiteSpace(value) || value.Length < 3 || value.Length > 150)
-            return Result<DepartmentName>.Failure("Invalid name");
-        return Result<DepartmentName>.Success(new DepartmentName(value));
+        if (string.IsNullOrWhiteSpace(value))
+            return GeneralErrors.ValueIsRequired("department name");
+        if (value.Length is < LengthConstants.LENGTH3 or > LengthConstants.LENGTH150)
+            return GeneralErrors.ValueIsInvalid("department name");
+        return new DepartmentName(value);
     }
 }

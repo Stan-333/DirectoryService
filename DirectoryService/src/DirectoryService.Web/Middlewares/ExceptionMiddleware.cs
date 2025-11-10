@@ -1,9 +1,8 @@
 ﻿using System.Text.Json;
 using DirectoryService.Application.Exceptions;
-using DirectoryService.Application.Locations.Fails.Exceptions;
 using Shared;
 
-namespace DirectoryService.Web.Middlewares;
+namespace DirectoryService.web.Middlewares;
 
 public class ExceptionMiddleware
 {

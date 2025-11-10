@@ -1,4 +1,6 @@
+using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Shared;
+using Shared;
 
 namespace DirectoryService.Domain.Positions;
 
@@ -29,14 +31,14 @@ public class Position
         UpdatedAt = updatedAt;
     }
 
-    public Result<Position> Create(PositionName name, string? description, bool isActive, DateTime createdAt,
+    public Result<Position, Error> Create(PositionName name, string? description, bool isActive, DateTime createdAt,
         DateTime? updatedAt)
     {
-        if ((description?.Length ?? 0) > 1000)
-            return Result<Position>.Failure("Description must be less than 1000 characters");
+        if ((description?.Length ?? 0) > LengthConstants.LENGTH1000)
+            return GeneralErrors.ValueIsInvalid("description");
         if (createdAt > DateTime.Now)
-            return Result<Position>.Failure("Date of create must be less than current date");
-        return Result<Position>.Success(new Position(name, description, isActive, createdAt.ToUniversalTime(),
-            updatedAt?.ToUniversalTime()));
+            return GeneralErrors.ValueIsInvalid("created_at");
+        return new Position(name, description, isActive, createdAt.ToUniversalTime(),
+            updatedAt?.ToUniversalTime());
     }
 }
