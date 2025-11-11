@@ -44,8 +44,7 @@ public class CreateLocationHandler
                 request.Address.Apartment).Value,
             TimeZone.Create(request.Timezone).Value,
             true,
-            DateTime.Now,
-            null);
+            DateTime.Now);
 
         await _locationsRepository.AddAsync(location.Value, cancellationToken);
 

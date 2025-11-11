@@ -9,6 +9,6 @@ public class DepartmentsController : ControllerBase
     [HttpGet]
     public void Test()
     {
-        
+
     }
 }

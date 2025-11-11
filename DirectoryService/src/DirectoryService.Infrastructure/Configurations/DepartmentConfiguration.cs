@@ -14,6 +14,7 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
         builder.HasKey(d => d.Id).HasName("pk_department");
 
         builder.Property(d => d.Id)
+            .IsRequired()
             .HasConversion(d => d.Value, d => new DepartmentId(d))
             .HasColumnName("department_id");
 
@@ -30,6 +31,7 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .HasColumnName("identifier");
 
         builder.Property(d => d.ParentId)
+            .IsRequired(false)
             .HasColumnName("parent_id")
             .HasConversion(
                 d => d == null ? (Guid?)null : d.Value,
@@ -51,18 +53,16 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .HasColumnName("depth");
 
         builder.Property(d => d.IsActive)
+            .IsRequired()
             .HasColumnName("is_active");
 
         builder.Property(d => d.CreatedAt)
+            .IsRequired()
             .HasColumnName("created_at");
 
         builder.Property(d => d.UpdatedAt)
+            .IsRequired()
             .HasColumnName("updated_at");
-
-        builder.HasMany(d => d.DepartmentLocations)
-            .WithOne(dl => dl.Department)
-            .HasForeignKey(dl => dl.DepartmentId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Navigation(d => d.DepartmentLocations)
             .HasField("_locations")
