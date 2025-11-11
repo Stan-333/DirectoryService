@@ -1,4 +1,6 @@
-using DirectoryService.Domain.Shared;
+using System.Runtime.InteropServices.JavaScript;
+using CSharpFunctionalExtensions;
+using Shared;
 using TimeZoneConverter;
 
 namespace DirectoryService.Domain.Locations;
@@ -9,12 +11,12 @@ public record TimeZone
 
     private TimeZone(string value) => Value = value;
 
-    public static Result<TimeZone> Create(string value)
+    public static Result<TimeZone, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            Result<TimeZone>.Failure("Значение не может быть пустым");
+            return GeneralErrors.ValueIsRequired("time zone");
         return TZConvert.KnownIanaTimeZoneNames.Contains(value)
-            ? Result<TimeZone>.Success(new TimeZone(value))
-            : Result<TimeZone>.Failure("Значение не соответствует формату IANA");
+            ? new TimeZone(value)
+            : GeneralErrors.ValueIsInvalid("time zone");
     }
 }

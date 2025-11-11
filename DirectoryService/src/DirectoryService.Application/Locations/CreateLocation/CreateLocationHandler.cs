@@ -1,7 +1,10 @@
-﻿using DirectoryService.Contracts.Locations;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.Extensions;
+using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain.Locations;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using Shared;
 using TimeZone = DirectoryService.Domain.Locations.TimeZone;
 
 namespace DirectoryService.Application.Locations.CreateLocation;
@@ -22,11 +25,13 @@ public class CreateLocationHandler
         _logger = logger;
     }
 
-    public async Task<Guid> Handle(CreateLocationRequest request, CancellationToken cancellationToken)
+    public async Task<Result<Guid, Errors>> Handle(CreateLocationRequest request, CancellationToken cancellationToken)
     {
         var validationResult = await _validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            throw new ValidationException(validationResult.Errors);
+        {
+            return validationResult.ToErrors();
+        }
 
         var location = Location.Create(
             LocationName.Create(request.Name).Value,

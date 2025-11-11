@@ -1,7 +1,7 @@
 ﻿using DirectoryService.Application;
 using DirectoryService.Infrastructure;
 
-namespace DirectoryService.Web;
+namespace DirectoryService.web;
 
 public static class DependencyInjection
 {

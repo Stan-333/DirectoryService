@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.DepartmentPositions;
-using DirectoryService.Domain.Locations;
-using DirectoryService.Domain.Shared;
+using Shared;
 
 namespace DirectoryService.Domain.Departments;
 
@@ -61,20 +61,22 @@ public class Department
         _positions = positions.ToList();
     }
 
-    public static Result<Department> Create(DepartmentName name, string identifier, Department? parent,
+    public static Result<Department, Error> Create(DepartmentName name, string identifier, Department? parent,
         bool isActive, DateTime createdAt, DateTime? updatedAt,
         IEnumerable<DepartmentLocation> locations,
         IEnumerable<DepartmentPosition> positions)
     {
+        if (string.IsNullOrWhiteSpace(identifier))
+            return GeneralErrors.ValueIsRequired("identifier");
         if (!Regex.IsMatch(identifier, "[a-zA-Z]{3,150}"))
-            return Result<Department>.Failure("Invalid identifier");
+            return GeneralErrors.ValueIsInvalid("identifier");
         if (createdAt > DateTime.Now)
-            return Result<Department>.Failure("Date of create must be less than current date");
+            return GeneralErrors.ValueIsInvalid("created at");
         if (!locations.Any())
-            return Result<Department>.Failure("Department must have at least one location");
+            return GeneralErrors.ValueIsRequired("location");
         string path = parent is null ? identifier : $"{parent.Path}.{identifier}";
-        return Result<Department>.Success(new Department(
+        return new Department(
             name, identifier, parent, path, Convert.ToInt16((parent?.Depth ?? 0) + 1),
-            isActive, createdAt.ToUniversalTime(), updatedAt?.ToUniversalTime(), locations, positions));
+            isActive, createdAt.ToUniversalTime(), updatedAt?.ToUniversalTime(), locations, positions);
     }
 }

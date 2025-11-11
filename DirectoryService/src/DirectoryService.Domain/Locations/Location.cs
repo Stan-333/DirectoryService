@@ -1,4 +1,5 @@
-using DirectoryService.Domain.Shared;
+using CSharpFunctionalExtensions;
+using Shared;
 
 namespace DirectoryService.Domain.Locations;
 
@@ -33,12 +34,12 @@ public class Location
         UpdatedAt = updatedAt;
     }
 
-    public static Result<Location> Create(LocationName name, Address address, TimeZone timezone,
+    public static Result<Location, Error> Create(LocationName name, Address address, TimeZone timezone,
         bool isActive, DateTime createdAt, DateTime? updatedAt)
     {
         if (createdAt > DateTime.Now)
-            return Result<Location>.Failure("Date of create must be less than current date");
-        return Result<Location>.Success(new Location(name, address, timezone, isActive,
-            createdAt.ToUniversalTime(), updatedAt?.ToUniversalTime()));
+            return GeneralErrors.ValueIsInvalid("location");
+        return new Location(name, address, timezone, isActive,
+            createdAt.ToUniversalTime(), updatedAt?.ToUniversalTime());
     }
 }
