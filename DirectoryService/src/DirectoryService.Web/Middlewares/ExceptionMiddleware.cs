@@ -44,6 +44,8 @@ public class ExceptionMiddleware
             _ => (StatusCodes.Status500InternalServerError, [Error.Failure(null, "Something went wrong")]),
         };
 
+        var envelope = Envelope.Error(new Errors(errors ?? []));
+
         // ответ будет в json формате
         context.Response.ContentType = "application/json";
 
@@ -51,6 +53,6 @@ public class ExceptionMiddleware
         context.Response.StatusCode = code;
 
         // запись ошибок в ответ
-        await context.Response.WriteAsJsonAsync(errors);
+        await context.Response.WriteAsJsonAsync(envelope);
     }
 }

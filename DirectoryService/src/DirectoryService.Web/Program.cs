@@ -5,10 +5,27 @@ using DirectoryService.web;
 using DirectoryService.web.Middlewares;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
 using Shared;
 using Shared.EndpointResults;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.Debug()
+    .WriteTo.Seq(builder.Configuration.GetConnectionString("Seq") ?? throw new ArgumentNullException("Seq"))
+    .Enrich.WithThreadId()
+    .Enrich.WithMachineName()
+    .Enrich.WithEnvironmentUserName()
+    .Enrich.FromLogContext()
+    .MinimumLevel.Override("Microsoft.AspNetCore.Hosting", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.AspNetCore.Mvc", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.AspNetCore.Routing", LogEventLevel.Warning)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddProgramDependencies();
 
@@ -34,12 +51,12 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddScoped<DirectoryServiceDbContext>(_ =>
     new DirectoryServiceDbContext(builder.Configuration));
 
-builder.Services.AddScoped<CreateLocationHandler>();
-
 var app = builder.Build();
 
 // Этот middleware обрабатывает все исключения, и его вызываем в самом начале
 app.UseExceptionMiddleware();
+
+app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
 {
