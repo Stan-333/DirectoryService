@@ -31,7 +31,7 @@ public class DepartmentLocationConfiguration : IEntityTypeConfiguration<Departme
             .HasConstraintName("fk_department_locations_department");
 
         builder.HasOne(dl => dl.Location)
-            .WithMany()
+            .WithMany(l => l.DepartmentLocations)
             .HasForeignKey(dl => dl.LocationId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade)

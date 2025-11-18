@@ -4,7 +4,7 @@ using Shared;
 
 namespace DirectoryService.Domain.Positions;
 
-public class Position
+public sealed class Position
 {
     public PositionId Id { get; set; }
 
@@ -16,14 +16,14 @@ public class Position
 
     public DateTime CreatedAt { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     // EF Core
     private Position() { }
 
-    private Position(PositionName name, string? description, bool isActive, DateTime createdAt, DateTime? updatedAt)
+    private Position(PositionId id, PositionName name, string? description, bool isActive, DateTime createdAt, DateTime updatedAt)
     {
-        Id = new PositionId(Guid.NewGuid());
+        Id = id;
         Name = name;
         Description = description;
         IsActive = isActive;
@@ -32,13 +32,15 @@ public class Position
     }
 
     public Result<Position, Error> Create(PositionName name, string? description, bool isActive, DateTime createdAt,
-        DateTime? updatedAt)
+        PositionId? positionId = null)
     {
         if ((description?.Length ?? 0) > LengthConstants.LENGTH1000)
             return GeneralErrors.ValueIsInvalid("description");
         if (createdAt > DateTime.Now)
             return GeneralErrors.ValueIsInvalid("created_at");
-        return new Position(name, description, isActive, createdAt.ToUniversalTime(),
-            updatedAt?.ToUniversalTime());
+        return new Position(
+            positionId ?? new PositionId(Guid.NewGuid()),
+            name, description, isActive, createdAt.ToUniversalTime(),
+            DateTime.UtcNow);
     }
 }

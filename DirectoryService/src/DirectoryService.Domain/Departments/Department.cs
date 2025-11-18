@@ -6,7 +6,7 @@ using Shared;
 
 namespace DirectoryService.Domain.Departments;
 
-public class Department
+public sealed class Department
 {
     private readonly List<Department> _children = [];
 
@@ -32,7 +32,7 @@ public class Department
 
     public DateTime CreatedAt { get; private set; }
 
-    public DateTime? UpdatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
 
     public IReadOnlyList<Department> Children => _children;
 
@@ -43,12 +43,11 @@ public class Department
     // EF Core
     private Department() { }
 
-    private Department(DepartmentName name, string identifier, Department? parent, string path,
-        short depth, bool isActive, DateTime createdAt, DateTime? updatedAt,
-        IEnumerable<DepartmentLocation> locations,
-        IEnumerable<DepartmentPosition> positions)
+    private Department(DepartmentId id, DepartmentName name, string identifier, Department? parent, string path,
+        short depth, bool isActive, DateTime createdAt, DateTime updatedAt,
+        IEnumerable<DepartmentLocation> locations)
     {
-        Id = new DepartmentId(Guid.NewGuid());
+        Id = id;
         Name = name;
         Identifier = identifier;
         Parent = parent;
@@ -58,13 +57,12 @@ public class Department
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         _locations = locations.ToList();
-        _positions = positions.ToList();
     }
 
     public static Result<Department, Error> Create(DepartmentName name, string identifier, Department? parent,
-        bool isActive, DateTime createdAt, DateTime? updatedAt,
+        bool isActive, DateTime createdAt,
         IEnumerable<DepartmentLocation> locations,
-        IEnumerable<DepartmentPosition> positions)
+        DepartmentId? departmentId = null)
     {
         if (string.IsNullOrWhiteSpace(identifier))
             return GeneralErrors.ValueIsRequired("identifier");
@@ -76,7 +74,8 @@ public class Department
             return GeneralErrors.ValueIsRequired("location");
         string path = parent is null ? identifier : $"{parent.Path}.{identifier}";
         return new Department(
+            departmentId ?? new DepartmentId(Guid.NewGuid()),
             name, identifier, parent, path, Convert.ToInt16((parent?.Depth ?? 0) + 1),
-            isActive, createdAt.ToUniversalTime(), updatedAt?.ToUniversalTime(), locations, positions);
+            isActive, createdAt.ToUniversalTime(), DateTime.UtcNow, locations);
     }
 }

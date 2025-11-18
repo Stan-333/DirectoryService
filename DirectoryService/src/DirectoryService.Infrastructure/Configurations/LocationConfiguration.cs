@@ -65,6 +65,11 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
             .HasColumnName("created_at");
 
         builder.Property(x => x.UpdatedAt)
+            .IsRequired()
             .HasColumnName("updated_at");
+
+        builder.Navigation(l => l.DepartmentLocations)
+            .HasField("_departmentLocations")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

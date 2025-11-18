@@ -18,7 +18,7 @@ namespace DirectoryService.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "9.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -98,7 +98,7 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("path");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -135,7 +135,7 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("timezone");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -210,7 +210,7 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("position_name");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -230,7 +230,7 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasConstraintName("fk_department_locations_department");
 
                     b.HasOne("DirectoryService.Domain.Locations.Location", "Location")
-                        .WithMany()
+                        .WithMany("DepartmentLocations")
                         .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -279,6 +279,11 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.Navigation("DepartmentLocations");
 
                     b.Navigation("DepartmentPositions");
+                });
+
+            modelBuilder.Entity("DirectoryService.Domain.Locations.Location", b =>
+                {
+                    b.Navigation("DepartmentLocations");
                 });
 #pragma warning restore 612, 618
         }

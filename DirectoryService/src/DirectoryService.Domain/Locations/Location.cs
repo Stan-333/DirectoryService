@@ -1,10 +1,13 @@
 using CSharpFunctionalExtensions;
+using DirectoryService.Domain.DepartmentLocations;
 using Shared;
 
 namespace DirectoryService.Domain.Locations;
 
-public class Location
+public sealed class Location
 {
+    private readonly List<DepartmentLocation> _departmentLocations;
+
     public LocationId Id { get; private set; }
 
     public LocationName Name { get; private set; }
@@ -17,15 +20,17 @@ public class Location
 
     public DateTime CreatedAt { get; private set; }
 
-    public DateTime? UpdatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
+
+    public IReadOnlyList<DepartmentLocation> DepartmentLocations => _departmentLocations;
 
     // EF Core
     private Location() { }
 
-    private Location(LocationName name, Address address, TimeZone timezone,
-        bool isActive, DateTime createdAt, DateTime? updatedAt)
+    private Location(LocationId id, LocationName name, Address address, TimeZone timezone,
+        bool isActive, DateTime createdAt, DateTime updatedAt)
     {
-        Id = new LocationId(Guid.NewGuid());
+        Id = id;
         Name = name;
         Address = address;
         Timezone = timezone;
@@ -35,11 +40,13 @@ public class Location
     }
 
     public static Result<Location, Error> Create(LocationName name, Address address, TimeZone timezone,
-        bool isActive, DateTime createdAt, DateTime? updatedAt)
+        bool isActive, DateTime createdAt, LocationId? id = null)
     {
         if (createdAt > DateTime.Now)
             return GeneralErrors.ValueIsInvalid("location");
-        return new Location(name, address, timezone, isActive,
-            createdAt.ToUniversalTime(), updatedAt?.ToUniversalTime());
+        return new Location(
+            id ?? new LocationId(Guid.NewGuid()),
+            name, address, timezone, isActive,
+            createdAt.ToUniversalTime(), DateTime.UtcNow);
     }
 }

@@ -44,12 +44,14 @@ public class CreateLocationHandler
                 request.Address.Apartment).Value,
             TimeZone.Create(request.Timezone).Value,
             true,
-            DateTime.Now,
-            null);
+            DateTime.Now);
 
         await _locationsRepository.AddAsync(location.Value, cancellationToken);
 
-        _logger.LogInformation("Location created with id {LocationId}", location.Value.Id.Value);
+        _logger.LogInformation(
+            "Location {LocationName} created with id {LocationId}",
+            location.Value.Name.Value,
+            location.Value.Id.Value);
 
         return location.Value.Id.Value;
     }
