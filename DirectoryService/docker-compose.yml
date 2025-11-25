@@ -12,7 +12,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - postgresql_data:/var/lib/postgresql/data
+      - postgresql_data:/var/lib/postgresql
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:latest
@@ -35,7 +35,7 @@ services:
       - '5341:5341'
       - '8081:80'
     volumes:
-      - seq-data:/var/lib/seq
+      - seq-data:/data
 
 volumes:
   postgresql_data:

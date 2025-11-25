@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Shared;
 using Shared;
 
 namespace DirectoryService.Domain.Locations;
@@ -41,15 +42,29 @@ public record Address
 
         if (string.IsNullOrWhiteSpace(region))
             return GeneralErrors.ValueIsRequired("region");
+        if (region.Length is < LengthConstants.LENGTH1 or > LengthConstants.LENGTH100)
+            return GeneralErrors.ValueIsInvalid("region");
 
         if (string.IsNullOrWhiteSpace(city))
             return GeneralErrors.ValueIsRequired("city");
+        if (city.Length is < LengthConstants.LENGTH1 or > LengthConstants.LENGTH100)
+            return GeneralErrors.ValueIsInvalid("city");
 
         if (string.IsNullOrWhiteSpace(street))
             return GeneralErrors.ValueIsRequired("street");
+        if (street.Length is < LengthConstants.LENGTH1 or > LengthConstants.LENGTH100)
+            return GeneralErrors.ValueIsInvalid("street");
 
         if (string.IsNullOrWhiteSpace(house))
             return GeneralErrors.ValueIsRequired("house");
+        if (house.Length is < LengthConstants.LENGTH1 or > LengthConstants.LENGTH10)
+            return GeneralErrors.ValueIsInvalid("house");
+
+        if (!string.IsNullOrWhiteSpace(apartment))
+        {
+            if (apartment.Length is < LengthConstants.LENGTH1 or > LengthConstants.LENGTH10)
+                return GeneralErrors.ValueIsInvalid("apartment");
+        }
 
         return new Address(
             postalCode.Trim(),

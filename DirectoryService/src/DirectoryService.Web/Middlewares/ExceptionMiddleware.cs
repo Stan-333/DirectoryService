@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using DirectoryService.Application.Exceptions;
 using Shared;
+using Shared.EndpointResults;
 
 namespace DirectoryService.web.Middlewares;
 

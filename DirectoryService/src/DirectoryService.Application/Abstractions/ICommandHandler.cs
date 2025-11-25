@@ -1,4 +1,18 @@
-﻿namespace DirectoryService.Application.Abstractions;
+﻿using CSharpFunctionalExtensions;
+using Shared;
 
-// Реализация в будущем
-public interface ICommandHandler;
+namespace DirectoryService.Application.Abstractions;
+
+public interface ICommand;
+
+public interface ICommandHandler<TResponse, in TCommand>
+    where TCommand : ICommand
+{
+    Task<Result<TResponse, Errors>> Handle(TCommand command, CancellationToken cancellationToken);
+}
+
+public interface ICommandHandler<in TCommand>
+    where TCommand : ICommand
+{
+    Task<UnitResult<Errors>> Handle(TCommand command, CancellationToken cancellationToken);
+}

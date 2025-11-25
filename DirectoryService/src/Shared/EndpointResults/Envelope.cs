@@ -1,7 +1,6 @@
 ﻿using System.Text.Json.Serialization;
-using Shared;
 
-namespace Shared;
+namespace Shared.EndpointResults;
 
 public record Envelope
 {
