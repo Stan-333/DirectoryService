@@ -4,10 +4,8 @@ using DirectoryService.Infrastructure;
 using DirectoryService.web;
 using DirectoryService.web.Middlewares;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
-using Shared;
 using Shared.EndpointResults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,25 +27,6 @@ builder.Host.UseSerilog();
 
 builder.Services.AddProgramDependencies();
 
-// На случай ошибки необходимо добавить код, позволяющий обрабатывать кастомный класс Error
-builder.Services.AddOpenApi(options =>
-{
-    options.AddSchemaTransformer((schema, context, _) =>
-    {
-        if (context.JsonTypeInfo.Type != typeof(Envelope<Errors>))
-        {
-            return Task.CompletedTask;
-        }
-
-        if (schema.Properties.TryGetValue("errors", out var errorsProp))
-        {
-            errorsProp.Items.Reference = new OpenApiReference { Type = ReferenceType.Schema, Id = "Error" };
-        }
-
-        return Task.CompletedTask;
-    });
-});
-
 builder.Services.AddScoped<DirectoryServiceDbContext>(_ =>
     new DirectoryServiceDbContext(builder.Configuration));
 
@@ -67,7 +46,7 @@ if (app.Environment.IsDevelopment())
 app.MapPost(
     "api/location",
     async Task<EndpointResult<Guid>> ([FromBody]CreateLocationRequest request, [FromServices]CreateLocationHandler handler, CancellationToken cancellationToken)
-        => await handler.Handle(request, cancellationToken));
+        => await handler.Handle(new CreateLocationCommand(request), cancellationToken));
 
 app.MapControllers();
 

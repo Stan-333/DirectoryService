@@ -1,4 +1,4 @@
-﻿using DirectoryService.Application.Locations.CreateLocation;
+﻿using DirectoryService.Application.Abstractions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +10,16 @@ public static class DependencyInjection
     {
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
-        services.AddScoped<CreateLocationHandler>();
+        // Код ниже использует Scrutor (набор сервисов для расширения IServiceCollection)
+        // Это описание инструкции, как найти реализации для интерфейсов
+        // AsSelfWithInterfaces() - регистрирует интерфейсы и их реализации, как в комментариях ниже
+        // services.AddScoped<ICommandHandler<Guid, CreateLocationCommand>, CreateLocationHandler>();
+        // services.AddScoped<CreateLocationCommand>();
+        var assembly = typeof(DependencyInjection).Assembly;
+        services.Scan(scan => scan.FromAssemblies(assembly)
+            .AddClasses(classes => classes.AssignableToAny(typeof(ICommandHandler<,>), typeof(ICommandHandler<>)))
+            .AsSelfWithInterfaces()
+            .WithScopedLifetime());
 
         return services;
     }

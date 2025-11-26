@@ -40,6 +40,18 @@ public record Error
         => new(code ?? "authorization", message, ErrorType.AUTHORIZATION);
 
     public Errors ToErrors() => new([this]);
+
+    // public string Serialize() => string.Join(SEPARATOR, Code, Message, Type);
+    //
+    // public static Error Deserialize(string serialized)
+    // {
+    //     var parts = serialized.Split(SEPARATOR);
+    //
+    //     if (parts.Length < 3 || Enum.TryParse<ErrorType>(parts[2], out var type) == false)
+    //         throw new ArgumentException("Invalid serialized error");
+    //
+    //     return new Error(parts[0], parts[1], type);
+    // }
 }
 
 public enum ErrorType
