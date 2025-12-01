@@ -1,5 +1,4 @@
 ﻿using DirectoryService.Domain.Departments;
-using DirectoryService.Domain.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,14 +20,20 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
         builder
             .Property(d => d.Name)
             .IsRequired()
-            .HasMaxLength(LengthConstants.LENGTH150)
+            .HasMaxLength(DepartmentName.NAME_MAX_LENGTH)
             .HasColumnName("department_name")
-            .HasConversion(d => d.Value, d => DepartmentName.Create(d).Value);
+            .HasConversion(d => d.Value, s => DepartmentName.Create(s).Value);
 
         builder.Property(d => d.Identifier)
             .IsRequired()
-            .HasMaxLength(LengthConstants.LENGTH150)
-            .HasColumnName("identifier");
+            .HasMaxLength(Identifier.MAX_LENGTH)
+            .HasColumnName("identifier")
+            .HasConversion(i => i.Value, s => Identifier.Create(s).Value);
+
+        builder.HasIndex(d => d.Identifier)
+            .HasDatabaseName("idx_department_identifier")
+            .HasFilter("is_active = true")
+            .IsUnique();
 
         builder.Property(d => d.ParentId)
             .IsRequired(false)
@@ -45,6 +50,8 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
         builder.Navigation(d => d.Children)
             .HasField("_children")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Ignore(d => d.ChildrenCount);
 
         builder.Property(d => d.Path)
             .HasColumnName("path");

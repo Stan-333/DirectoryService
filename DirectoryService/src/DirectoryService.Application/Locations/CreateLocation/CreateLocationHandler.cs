@@ -1,7 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
-using DirectoryService.Contracts.Locations;
 using DirectoryService.Domain.Locations;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
@@ -35,7 +34,7 @@ public class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand
         }
 
         LocationName locationName = LocationName.Create(command.Request.Name).Value;
-        if (_locationsRepository.GetCountByNameAsync(locationName, cancellationToken).Result != 0)
+        if (await _locationsRepository.IsActiveLocationNameExistAsync(locationName, cancellationToken))
         {
             return Error.Validation("record.already.exist", "Локация с таким именем уже существует")
                 .ToErrors();
@@ -48,7 +47,7 @@ public class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand
             command.Request.Address.Street,
             command.Request.Address.House,
             command.Request.Address.Apartment).Value;
-        if (_locationsRepository.GetCountByAddressAsync(address, cancellationToken).Result != 0)
+        if (await _locationsRepository.IsActiveAddressExistAsync(address, cancellationToken))
         {
             return Error.Validation("record.already.exist", "Локация с таким адресом уже существует")
                 .ToErrors();
@@ -62,6 +61,12 @@ public class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand
             DateTime.Now);
 
         await _locationsRepository.AddAsync(location.Value, cancellationToken);
+
+        var saveChangeResult = await _locationsRepository.SaveChangesAsync(cancellationToken);
+        if (saveChangeResult.IsFailure)
+        {
+            return saveChangeResult.Error;
+        }
 
         _logger.LogInformation(
             "Location {LocationName} created with id {LocationId}",

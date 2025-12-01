@@ -12,19 +12,24 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
     {
         builder.ToTable("locations");
 
-        builder.HasKey(x => x.Id).HasName("pk_location");
+        builder.HasKey(l => l.Id).HasName("pk_location");
 
-        builder.Property(x => x.Id)
-            .HasConversion(x => x.Value, x => new LocationId(x))
+        builder.Property(l => l.Id)
+            .HasConversion(locId => locId.Value, id => new LocationId(id))
             .HasColumnName("location_id");
 
-        builder.Property(x => x.Name)
+        builder.Property(l => l.Name)
             .IsRequired()
-            .HasMaxLength(LengthConstants.LENGTH120)
+            .HasMaxLength(LocationName.NAME_MAX_LENGTH)
             .HasColumnName("location_name")
-            .HasConversion(x => x.Value, x => LocationName.Create(x).Value);
+            .HasConversion(locName => locName.Value, x => LocationName.Create(x).Value);
 
-        builder.ComplexProperty(x => x.Address, ab =>
+        builder.HasIndex(l => l.Name)
+            .HasDatabaseName("idx_location_name")
+            .HasFilter("is_active = true")
+            .IsUnique();
+
+        builder.ComplexProperty(l => l.Address, ab =>
         {
             ab.Property(a => a.PostalCode)
                 .IsRequired()
@@ -51,20 +56,31 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
                 .HasColumnName("apartment");
         });
 
-        builder.Property(x => x.Timezone)
+        // Нерабочий вариант индекса (задача на будущее сделать рабочий)
+        // builder.HasIndex(l => new
+        // {
+        //     l.Address.PostalCode,
+        //     l.Address.Region,
+        //     l.Address.City,
+        //     l.Address.Street,
+        //     l.Address.House,
+        //     l.Address.Apartment,
+        // }).HasDatabaseName("idx_location_address").HasFilter("is_active = true").IsUnique();
+
+        builder.Property(l => l.Timezone)
             .IsRequired()
             .HasColumnName("timezone")
-            .HasConversion(x => x.Value, x => TimeZone.Create(x).Value);
+            .HasConversion(tz => tz.Value, x => TimeZone.Create(x).Value);
 
-        builder.Property(x => x.IsActive)
+        builder.Property(l => l.IsActive)
             .IsRequired()
             .HasColumnName("is_active");
 
-        builder.Property(x => x.CreatedAt)
+        builder.Property(l => l.CreatedAt)
             .IsRequired()
             .HasColumnName("created_at");
 
-        builder.Property(x => x.UpdatedAt)
+        builder.Property(l => l.UpdatedAt)
             .IsRequired()
             .HasColumnName("updated_at");
 

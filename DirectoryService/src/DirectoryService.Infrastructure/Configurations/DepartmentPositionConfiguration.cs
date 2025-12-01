@@ -29,7 +29,7 @@ public class DepartmentPositionConfiguration : IEntityTypeConfiguration<Departme
             .HasConstraintName("fk_department_positions_department");
 
         builder.HasOne(dp => dp.Position)
-            .WithMany()
+            .WithMany(p => p.DepartmentPositions)
             .HasForeignKey(dp => dp.PositionId)
             .HasConstraintName("fk_department_positions_position");
     }

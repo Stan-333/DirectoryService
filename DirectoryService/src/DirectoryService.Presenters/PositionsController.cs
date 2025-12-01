@@ -1,7 +1,7 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
-using DirectoryService.Application.Departments.CreateDepartment;
-using DirectoryService.Contracts.Departments;
+using DirectoryService.Application.Positions.CreatePosition;
+using DirectoryService.Contracts.Positions;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 using Shared.EndpointResults;
@@ -9,16 +9,16 @@ using Shared.EndpointResults;
 namespace DirectoryService.Presenters;
 
 [ApiController]
-[Route("api/departments")]
-public class DepartmentsController : ControllerBase
+[Route("api/positions")]
+public sealed class PositionsController : ControllerBase
 {
     [HttpPost]
     public async Task<EndpointResult<Guid>> Create(
-        [FromBody] CreateDepartmentRequest request,
-        [FromServices] ICommandHandler<Guid, CreateDepartmentCommand> handler,
+        [FromBody] CreatePositionRequest request,
+        [FromServices] ICommandHandler<Guid, CreatePositionCommand> handler,
         CancellationToken cancellationToken)
     {
-        var command = new CreateDepartmentCommand(request);
+        var command = new CreatePositionCommand(request);
 
         Result<Guid, Errors> result = await handler.Handle(command, cancellationToken);
 

@@ -32,7 +32,7 @@ public class DirectoryServiceDbContext(IConfiguration configuration) : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DirectoryServiceDbContext).Assembly);
 
-    private ILoggerFactory CreateLoggerFactory() =>
+    private static ILoggerFactory CreateLoggerFactory() =>
         LoggerFactory.Create(builder =>
         {
             builder.AddConsole();

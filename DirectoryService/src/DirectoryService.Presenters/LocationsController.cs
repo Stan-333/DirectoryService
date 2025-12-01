@@ -9,7 +9,7 @@ using Shared.EndpointResults;
 namespace DirectoryService.Presenters;
 
 [ApiController]
-[Route("api/location")]
+[Route("api/locations")]
 public sealed class LocationsController : ControllerBase
 {
     [HttpPost]

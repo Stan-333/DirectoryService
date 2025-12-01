@@ -19,13 +19,18 @@ public class PositionConfiguration : IEntityTypeConfiguration<Position>
 
         builder.Property(p => p.Name)
             .IsRequired()
-            .HasMaxLength(LengthConstants.LENGTH100)
+            .HasMaxLength(PositionName.NAME_MAX_LENGTH)
             .HasColumnName("position_name")
             .HasConversion(p => p.Value, p => PositionName.Create(p).Value);
 
+        builder.HasIndex(p => p.Name)
+            .HasDatabaseName("idx_position_name")
+            .HasFilter("is_active = true")
+            .IsUnique();
+
         builder.Property(p => p.Description)
             .IsRequired(false)
-            .HasMaxLength(LengthConstants.LENGTH1000)
+            .HasMaxLength(Position.DESCRIPTION_MAX_LENGTH)
             .HasColumnName("description");
 
         builder.Property(p => p.IsActive)
@@ -39,5 +44,10 @@ public class PositionConfiguration : IEntityTypeConfiguration<Position>
         builder.Property(p => p.UpdatedAt)
             .IsRequired()
             .HasColumnName("updated_at");
+
+        builder.HasMany(p => p.DepartmentPositions)
+            .WithOne(dp => dp.Position)
+            .HasForeignKey(dp => dp.PositionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
