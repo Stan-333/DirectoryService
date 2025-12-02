@@ -18,7 +18,7 @@ public sealed class Department
 
     public DepartmentName Name { get; private set; }
 
-    public string Identifier { get; private set; }
+    public Identifier Identifier { get; private set; }
 
     public DepartmentId? ParentId { get; private set; }
 
@@ -27,6 +27,8 @@ public sealed class Department
     public string Path { get; private set; }
 
     public short Depth { get; private set; }
+
+    public int ChildrenCount { get; private set; }
 
     public bool IsActive { get; private set; }
 
@@ -43,8 +45,16 @@ public sealed class Department
     // EF Core
     private Department() { }
 
-    private Department(DepartmentId id, DepartmentName name, string identifier, Department? parent, string path,
-        short depth, bool isActive, DateTime createdAt, DateTime updatedAt,
+    private Department(
+        DepartmentId id,
+        DepartmentName name,
+        Identifier identifier,
+        Department? parent,
+        string path,
+        short depth,
+        bool isActive,
+        DateTime createdAt,
+        DateTime updatedAt,
         IEnumerable<DepartmentLocation> locations)
     {
         Id = id;
@@ -53,29 +63,66 @@ public sealed class Department
         Parent = parent;
         Path = path;
         Depth = depth;
+        ChildrenCount = Children.Count;
         IsActive = isActive;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         _locations = locations.ToList();
     }
 
-    public static Result<Department, Error> Create(DepartmentName name, string identifier, Department? parent,
-        bool isActive, DateTime createdAt,
+    public static Result<Department, Error> CreateParent(
+        DepartmentName name,
+        Identifier identifier,
         IEnumerable<DepartmentLocation> locations,
         DepartmentId? departmentId = null)
     {
-        if (string.IsNullOrWhiteSpace(identifier))
-            return GeneralErrors.ValueIsRequired("identifier");
-        if (!Regex.IsMatch(identifier, "[a-zA-Z]{3,150}"))
-            return GeneralErrors.ValueIsInvalid("identifier");
-        if (createdAt > DateTime.Now)
-            return GeneralErrors.ValueIsInvalid("created at");
-        if (!locations.Any())
-            return GeneralErrors.ValueIsRequired("location");
-        string path = parent is null ? identifier : $"{parent.Path}.{identifier}";
+        var departmentLocationList = locations.ToList();
+        if (departmentLocationList.Count == 0)
+        {
+            return Error.Validation(
+                "value.is.required",
+                "Список DepartmentLocations должен содержать хотя бы одну локацию");
+        }
+
         return new Department(
             departmentId ?? new DepartmentId(Guid.NewGuid()),
-            name, identifier, parent, path, Convert.ToInt16((parent?.Depth ?? 0) + 1),
-            isActive, createdAt.ToUniversalTime(), DateTime.UtcNow, locations);
+            name,
+            identifier,
+            null,
+            identifier.Value,
+            0,
+            true,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            departmentLocationList);
+    }
+
+    public static Result<Department, Error> CreateChild(
+        DepartmentName name,
+        Identifier identifier,
+        Department parent,
+        IEnumerable<DepartmentLocation> locations,
+        DepartmentId? departmentId = null)
+    {
+        var departmentLocationList = locations.ToList();
+        if (departmentLocationList.Count == 0)
+        {
+            return Error.Validation(
+                "value.is.required",
+                "Список DepartmentLocations должен содержать хотя бы одну локацию");
+        }
+
+        string path = $"{parent.Path}.{identifier.Value}";
+        return new Department(
+            departmentId ?? new DepartmentId(Guid.NewGuid()),
+            name,
+            identifier,
+            parent,
+            path,
+            Convert.ToInt16((parent?.Depth ?? 0) + 1),
+            true,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            departmentLocationList);
     }
 }

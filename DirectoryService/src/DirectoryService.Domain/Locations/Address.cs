@@ -37,7 +37,7 @@ public record Address
         if (string.IsNullOrWhiteSpace(postalCode))
             return GeneralErrors.ValueIsRequired("postal code");
 
-        if (!Regex.IsMatch(postalCode, @"^\d{6}"))
+        if (!Regex.IsMatch(postalCode, @"^\d{6}$"))
             return GeneralErrors.ValueIsInvalid("postal code");
 
         if (string.IsNullOrWhiteSpace(region))

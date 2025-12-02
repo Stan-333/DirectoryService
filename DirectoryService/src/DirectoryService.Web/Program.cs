@@ -43,10 +43,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "DirectoryService"));
 }
 
-app.MapPost(
-    "api/location",
-    async Task<EndpointResult<Guid>> ([FromBody]CreateLocationRequest request, [FromServices]CreateLocationHandler handler, CancellationToken cancellationToken)
-        => await handler.Handle(new CreateLocationCommand(request), cancellationToken));
+// app.MapPost(
+//     "api/locations",
+//     async Task<EndpointResult<Guid>> (
+//             [FromBody]CreateLocationRequest request,
+//             [FromServices]CreateLocationHandler handler,
+//             CancellationToken cancellationToken)
+//         => await handler.Handle(new CreateLocationCommand(request), cancellationToken));
 
 app.MapControllers();
 
