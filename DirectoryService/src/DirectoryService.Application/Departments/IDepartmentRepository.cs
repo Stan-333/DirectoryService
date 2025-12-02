@@ -39,10 +39,10 @@ public interface IDepartmentRepository
     Task<bool> IsActiveIdentifierExistAsync(Identifier identifier, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Проверка существования активной локации
+    /// Проверка существования активных локаций
     /// </summary>
-    /// <param name="locationId">Id локации.</param>
+    /// <param name="locationIds">Список локаций.</param>
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Результат проверки.</returns>
-    Task<bool> IsActiveLocationExistAsync(LocationId locationId, CancellationToken cancellationToken = default);
+    Task<bool> IsActiveLocationsExistAsync(List<LocationId> locationIds, CancellationToken cancellationToken = default);
 }

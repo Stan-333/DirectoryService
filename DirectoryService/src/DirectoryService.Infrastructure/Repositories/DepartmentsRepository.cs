@@ -45,6 +45,9 @@ public class DepartmentsRepository : IDepartmentRepository
     {
         try
         {
+            // var department = await _dbContext.Departments.FindAsync(id, cancellationToken);
+            // if (department is not null)
+            //     return department;
             return await _dbContext.Departments
                 .SingleAsync(d => d.Id == id && d.IsActive, cancellationToken);
         }
@@ -63,11 +66,11 @@ public class DepartmentsRepository : IDepartmentRepository
             d => d.Identifier == identifier && d.IsActive, cancellationToken);
     }
 
-    public async Task<bool> IsActiveLocationExistAsync(
-        LocationId locationId,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> IsActiveLocationsExistAsync(List<LocationId> locationIds, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Locations.AnyAsync(
-            l => l.Id == locationId && l.IsActive, cancellationToken);
+        int queryResult = await _dbContext.Locations
+            .Where(l => locationIds.Contains(l.Id) && l.IsActive)
+            .CountAsync(cancellationToken);
+        return queryResult == locationIds.Count;
     }
 }

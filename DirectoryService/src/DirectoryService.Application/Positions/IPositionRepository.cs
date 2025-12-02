@@ -39,10 +39,10 @@ public interface IPositionRepository
     Task<bool> IsActiveDepartmentNameExistAsync(PositionName name, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Проверка существования активного подразделения
+    /// Проверка существования действующих подразделения по списку ID
     /// </summary>
-    /// <param name="departmentId">Id подразделения.</param>
+    /// <param name="departmentIds">Список ID.</param>
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Результат проверки.</returns>
-    Task<bool> IsActiveDepartmentExistAsync(DepartmentId departmentId, CancellationToken cancellationToken = default);
+    Task<bool> IsActiveDepartmentsExistAsync(List<DepartmentId> departmentIds, CancellationToken cancellationToken = default);
 }

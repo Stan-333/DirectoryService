@@ -64,11 +64,13 @@ public class PositionsRepository : IPositionRepository
         return await _dbContext.Positions.AnyAsync(p => p.Name == name && p.IsActive, cancellationToken);
     }
 
-    public async Task<bool> IsActiveDepartmentExistAsync(
-        DepartmentId departmentId,
+    public async Task<bool> IsActiveDepartmentsExistAsync(
+        List<DepartmentId> departmentIds,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Departments.AnyAsync(
-            d => d.Id == departmentId && d.IsActive, cancellationToken);
+        int queryResult = await _dbContext.Departments
+            .Where(d => departmentIds.Contains(d.Id) && d.IsActive)
+            .CountAsync(cancellationToken);
+        return queryResult == departmentIds.Count;
     }
 }

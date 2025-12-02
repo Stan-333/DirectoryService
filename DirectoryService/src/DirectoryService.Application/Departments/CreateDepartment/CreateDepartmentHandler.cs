@@ -43,15 +43,13 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
                 .ToErrors();
         }
 
-        foreach (Guid guid in command.Request.LocationIds)
+        if (!await _departmentRepository.IsActiveLocationsExistAsync(
+                command.Request.LocationIds.Select(locId => new LocationId(locId)).ToList(),
+                cancellationToken))
         {
-            if (!await _departmentRepository.IsActiveLocationExistAsync(new LocationId(guid), cancellationToken))
-            {
-                return Error.NotFound(
-                    "location.not.found",
-                    $"Локация с id - {guid} отсутствует",
-                    guid).ToErrors();
-            }
+            return Error.NotFound(
+                "location.not.found",
+                $"В базе данных отсутствуют одна или несколько локаций из списка").ToErrors();
         }
 
         DepartmentId departmentId = new DepartmentId(Guid.NewGuid());

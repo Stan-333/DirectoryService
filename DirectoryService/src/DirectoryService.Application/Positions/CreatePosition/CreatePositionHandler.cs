@@ -41,17 +41,14 @@ public class CreatePositionHandler : ICommandHandler<Guid, CreatePositionCommand
             return GeneralErrors.AlreadyExist("position").ToErrors();
         }
 
-        foreach (Guid guid in command.Request.DepartmentIds)
+        if (!await _positionRepository.IsActiveDepartmentsExistAsync(
+                command.Request.DepartmentIds.Select(id => new DepartmentId(id)).ToList(),
+                cancellationToken))
         {
-            if (!await _positionRepository.IsActiveDepartmentExistAsync(
-                    new DepartmentId(guid),
-                    cancellationToken))
-            {
-                return Error.NotFound(
-                    "department.not.found",
-                    $"Подразделение с id - {guid} отсутствует",
-                    guid).ToErrors();
-            }
+            return Error.NotFound(
+                "department.not.found",
+                $"В базе данных отсутствуют одна или несколько должностей из списка")
+                .ToErrors();
         }
 
         PositionId positionId = new PositionId(Guid.NewGuid());
