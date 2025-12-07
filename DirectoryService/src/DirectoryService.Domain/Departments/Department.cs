@@ -10,7 +10,7 @@ public sealed class Department
 {
     private readonly List<Department> _children = [];
 
-    private readonly List<DepartmentLocation> _locations;
+    private List<DepartmentLocation> _locations;
 
     private readonly List<DepartmentPosition> _positions;
 
@@ -67,6 +67,11 @@ public sealed class Department
         IsActive = isActive;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
+        _locations = locations.ToList();
+    }
+
+    public void UpdateLocations(IEnumerable<DepartmentLocation> locations)
+    {
         _locations = locations.ToList();
     }
 

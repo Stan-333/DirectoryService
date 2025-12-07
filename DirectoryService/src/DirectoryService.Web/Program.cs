@@ -25,10 +25,9 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-builder.Services.AddProgramDependencies();
+builder.Services.AddScoped<DirectoryServiceDbContext>(_ => new DirectoryServiceDbContext(builder.Configuration));
 
-builder.Services.AddScoped<DirectoryServiceDbContext>(_ =>
-    new DirectoryServiceDbContext(builder.Configuration));
+builder.Services.AddProgramDependencies();
 
 var app = builder.Build();
 
@@ -43,13 +42,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "DirectoryService"));
 }
 
-// app.MapPost(
-//     "api/locations",
-//     async Task<EndpointResult<Guid>> (
-//             [FromBody]CreateLocationRequest request,
-//             [FromServices]CreateLocationHandler handler,
-//             CancellationToken cancellationToken)
-//         => await handler.Handle(new CreateLocationCommand(request), cancellationToken));
+/*app.MapPost(
+    "api/locations",
+    async Task<EndpointResult<Guid>> (
+            [FromBody]CreateLocationRequest request,
+            [FromServices]CreateLocationHandler handler,
+            CancellationToken cancellationToken)
+        => await handler.Handle(new CreateLocationCommand(request), cancellationToken));*/
 
 app.MapControllers();
 

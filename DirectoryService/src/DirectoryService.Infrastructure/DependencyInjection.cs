@@ -1,6 +1,9 @@
-﻿using DirectoryService.Application.Departments;
+﻿using System.Runtime.CompilerServices;
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
+using DirectoryService.Infrastructure.Database;
 using DirectoryService.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<ILocationsRepository, LocationsRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentsRepository>();
         services.AddScoped<IPositionRepository, PositionsRepository>();
+        services.AddScoped<ITransactionManager, TransactionManager>();
         return services;
     }
 }

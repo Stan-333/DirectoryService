@@ -23,12 +23,30 @@ public interface IDepartmentRepository
     Task<UnitResult<Errors>> SaveChangesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Получение подразделения по id
+    /// Получение подразделения по ID
     /// </summary>
-    /// <param name="id">Id подразделения.</param>
+    /// <param name="id">ID подразделения.</param>
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Подразделение.</returns>
     Task<Result<Department, Error>> GetByIdAsync(DepartmentId id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Получение подразделения по ID с локациями
+    /// </summary>
+    /// <param name="id">ID подразделения.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Подразделение с локациями.</returns>
+    Task<Result<Department, Error>> GetByIdWithDepartmentLocationsAsync(
+        DepartmentId id,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Существует ли активное подразделение по ID
+    /// </summary>
+    /// <param name="id">ID подразделения.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Результат проверки.</returns>
+    Task<bool> IsActiveDepartmentExistAsync(DepartmentId id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Существует ли активное подразделение по идентификатору (проверка уникальности идентификатора)
@@ -45,4 +63,14 @@ public interface IDepartmentRepository
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Результат проверки.</returns>
     Task<bool> IsActiveLocationsExistAsync(List<LocationId> locationIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Удаление локаций у подразделения по его ID
+    /// </summary>
+    /// <param name="departmentId">ID подразделения.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Результат удаления.</returns>
+    Task<UnitResult<Error>> DeleteDepartmentLocationsByIdAsync(
+        DepartmentId departmentId,
+        CancellationToken cancellationToken = default);
 }
