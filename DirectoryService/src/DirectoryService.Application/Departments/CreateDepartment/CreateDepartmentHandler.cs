@@ -76,6 +76,14 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
                 return parent.Error.ToErrors();
             }
 
+            if (!parent.Value.IsActive)
+            {
+                return Error.NotFound(
+                    null,
+                    "Родительское подразделение не активно",
+                    parent.Value.Id.Value).ToErrors();
+            }
+
             department = Department.CreateChild(
                 departmentName,
                 identifier,
@@ -98,7 +106,7 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
         }
 
         _logger.LogInformation(
-            "Department {DepartmentName} created with id {DepartmentId}",
+            "Подразделение {DepartmentName} создано с id {DepartmentId}",
             department.Value.Name.Value,
             department.Value.Id.Value);
 

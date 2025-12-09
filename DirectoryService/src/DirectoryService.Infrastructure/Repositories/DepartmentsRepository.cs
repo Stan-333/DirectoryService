@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Departments;
+using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
@@ -43,19 +44,37 @@ public class DepartmentsRepository : IDepartmentRepository
         DepartmentId id,
         CancellationToken cancellationToken = default)
     {
+        var department = await _dbContext.Departments.FindAsync([id], cancellationToken);
+        if (department is not null)
+        {
+            return department;
+        }
+
+        _logger.LogError("Подразделение с идентификатором {id} не найдено", id.Value);
+        return GeneralErrors.NotFound(id.Value, nameof(Department));
+    }
+
+    public async Task<Result<Department, Error>> GetByIdWithDepartmentLocationsAsync(
+        DepartmentId id,
+        CancellationToken cancellationToken = default)
+    {
         try
         {
-            // var department = await _dbContext.Departments.FindAsync(id, cancellationToken);
-            // if (department is not null)
-            //     return department;
             return await _dbContext.Departments
-                .SingleAsync(d => d.Id == id && d.IsActive, cancellationToken);
+                .Include(d => d.DepartmentLocations)
+                .SingleAsync(d => d.Id == id, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка получения подразделения из базы данных");
             return GeneralErrors.Failure(ex.Message);
         }
+    }
+
+    public async Task<bool> IsActiveDepartmentExistAsync(DepartmentId id, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Departments.AnyAsync(
+            d => d.Id == id && d.IsActive, cancellationToken);
     }
 
     public async Task<bool> IsActiveIdentifierExistAsync(
@@ -72,5 +91,44 @@ public class DepartmentsRepository : IDepartmentRepository
             .Where(l => locationIds.Contains(l.Id) && l.IsActive)
             .CountAsync(cancellationToken);
         return queryResult == locationIds.Count;
+    }
+
+    public async Task<UnitResult<Error>> DeleteDepartmentLocationsByIdAsync(
+        DepartmentId departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _dbContext.DepartmentLocations
+                .Where(dl => dl.DepartmentId == departmentId)
+                .ExecuteDeleteAsync(cancellationToken);
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Ошибка удаления локаций у подразделения с id {DepartmentId}.",
+                departmentId.Value);
+            return GeneralErrors.Failure(ex.Message);
+        }
+    }
+
+    public async Task<UnitResult<Error>> AddDepartmentLocationsAsync(
+        DepartmentId departmentId,
+        List<LocationId> locationIds,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _dbContext.DepartmentLocations
+                .AddRangeAsync(
+                    locationIds.Select(locId => new DepartmentLocation(departmentId, locId)), cancellationToken);
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка добавления локаций подразделения в базу данных");
+            return GeneralErrors.Failure(ex.Message);
+        }
     }
 }
