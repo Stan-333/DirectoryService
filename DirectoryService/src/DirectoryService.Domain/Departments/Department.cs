@@ -75,6 +75,29 @@ public sealed class Department
         _locations = locations.ToList();
     }
 
+    /// <summary>
+    /// Обновление родительского подразделение
+    /// </summary>
+    /// <param name="parent">Родительское подразделение.</param>
+    public void UpdateParent(Department? parent)
+    {
+        Parent = parent;
+        if (parent == null)
+        {
+            ParentId = null;
+            Path = Identifier.Value;
+            Depth = 0;
+        }
+        else
+        {
+            ParentId = parent.Id;
+            Path = $"{parent.Path}.{Identifier.Value}";
+            Depth = Convert.ToInt16(parent.Depth + 1);
+        }
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public static Result<Department, Error> CreateParent(
         DepartmentName name,
         Identifier identifier,
