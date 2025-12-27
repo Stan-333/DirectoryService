@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments.CreateDepartment;
 using DirectoryService.Application.Departments.UpdateDepartmentLocations;
+using DirectoryService.Application.Departments.UpdateDepartmentParent;
 using DirectoryService.Contracts.Departments;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
@@ -34,6 +35,20 @@ public class DepartmentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new UpdateDepartmentLocationsCommand(departmentId, request);
+
+        var result = await handler.Handle(command, cancellationToken);
+
+        return result;
+    }
+
+    [HttpPut("/api/departments/{departmentId:guid}/parent")]
+    public async Task<EndpointResult<Guid>> UpdateParent(
+        [FromRoute] Guid departmentId,
+        [FromBody] UpdateDepartmentParentRequest request,
+        [FromServices] ICommandHandler<Guid, UpdateDepartmentParentCommand> handler,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdateDepartmentParentCommand(departmentId, request);
 
         var result = await handler.Handle(command, cancellationToken);
 

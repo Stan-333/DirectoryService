@@ -29,8 +29,11 @@ public class DirectoryServiceDbContext(IConfiguration configuration) : DbContext
         optionsBuilder.UseLoggerFactory(CreateLoggerFactory());
     }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.HasPostgresExtension("ltree");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DirectoryServiceDbContext).Assembly);
+    }
 
     private static ILoggerFactory CreateLoggerFactory() =>
         LoggerFactory.Create(builder =>

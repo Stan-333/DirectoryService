@@ -1,9 +1,11 @@
 ﻿using CSharpFunctionalExtensions;
+using Dapper;
 using DirectoryService.Application.Departments;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Shared;
 
@@ -54,19 +56,26 @@ public class DepartmentsRepository : IDepartmentRepository
         return GeneralErrors.NotFound(id.Value, nameof(Department));
     }
 
-    public async Task<Result<Department, Error>> GetByIdWithDepartmentLocationsAsync(
+    public async Task<Result<Department, Error>> GetByIdWithLockAsync(
         DepartmentId id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         try
         {
-            return await _dbContext.Departments
-                .Include(d => d.DepartmentLocations)
-                .SingleAsync(d => d.Id == id, cancellationToken);
+            await _dbContext.Database.ExecuteSqlAsync(
+                $"SELECT 1 FROM departments WHERE department_id = {id.Value} AND is_active = true FOR UPDATE;",
+                cancellationToken);
+
+            var department = await _dbContext.Departments
+                .SingleOrDefaultAsync(d => d.Id == id && d.IsActive, cancellationToken);
+
+            return department == null
+                ? GeneralErrors.NotFound(id.Value, nameof(Department))
+                : department!;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка получения подразделения из базы данных");
+            _logger.LogError(ex, "Ошибка получения подразделения {DepartmentId} с блокировкой из базы данных", id.Value);
             return GeneralErrors.Failure(ex.Message);
         }
     }
@@ -106,9 +115,102 @@ public class DepartmentsRepository : IDepartmentRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
+            _logger.LogError(
+                ex,
                 "Ошибка удаления локаций у подразделения с id {DepartmentId}.",
                 departmentId.Value);
+            return GeneralErrors.Failure(ex.Message);
+        }
+    }
+
+    public async Task<Result<bool, Error>> IsParent(
+        string parentPath,
+        DepartmentId childId,
+        CancellationToken cancellationToken = default)
+    {
+        const string sqlCommand = """
+                                  SELECT EXISTS(SELECT 1
+                                  FROM departments
+                                  WHERE
+                                    "path" <@ @parentPath::ltree
+                                    AND department_id = @departmentId
+                                    AND is_active = TRUE);
+                                  """;
+        var command = new CommandDefinition(
+            sqlCommand,
+            new { parentPath, departmentId = childId.Value },
+            transaction: _dbContext.Database.CurrentTransaction?.GetDbTransaction(),
+            cancellationToken: cancellationToken);
+        try
+        {
+            return await _dbContext.Database.GetDbConnection().ExecuteScalarAsync<bool>(command);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка проверки подразделений на подчинённость");
+            return GeneralErrors.Failure(ex.Message);
+        }
+    }
+
+    public async Task<UnitResult<Error>> LockDescendantsAsync(
+        string parentPath,
+        CancellationToken cancellationToken = default)
+    {
+        const string sqlCommand = """
+                                  SELECT 1
+                                  FROM departments
+                                  WHERE
+                                    "path" <@ @parentPath::ltree
+                                    AND nlevel("path") > nlevel(@parentPath::ltree)
+                                    AND is_active = true
+                                  FOR UPDATE;
+                                  """;
+        var command = new CommandDefinition(
+            sqlCommand,
+            new { parentPath },
+            transaction: _dbContext.Database.CurrentTransaction?.GetDbTransaction(),
+            cancellationToken: cancellationToken);
+        try
+        {
+            await _dbContext.Database.GetDbConnection().ExecuteAsync(command);
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка блокировки подчинённых подразделений");
+            return GeneralErrors.Failure(ex.Message);
+        }
+    }
+
+    public async Task<UnitResult<Error>> UpdateDescendantProperties(
+        string oldParentPath,
+        string newParentPath,
+        CancellationToken cancellationToken = default)
+    {
+        const string sqlCommand = """
+                                  UPDATE departments
+                                  SET
+                                    "path" = @newParentPath::ltree || subpath("path", nlevel(@oldParentPath::ltree), nlevel("path")),
+                                    "depth" = "depth" + (nlevel(@newParentPath::ltree)-nlevel(@oldParentPath::ltree)),
+                                    updated_at = now()
+                                  WHERE
+                                    "path" <@ @oldParentPath::ltree
+                                    AND nlevel("path") > nlevel(@oldParentPath::ltree)
+                                    AND is_active = TRUE;
+                                  """;
+        var command = new CommandDefinition(
+            sqlCommand,
+            new { newParentPath, oldParentPath },
+            transaction: _dbContext.Database.CurrentTransaction?.GetDbTransaction(),
+            cancellationToken: cancellationToken);
+        try
+        {
+            await _dbContext.Database.GetDbConnection().ExecuteAsync(command);
+            return UnitResult.Success<Error>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка проверки подразделений на подчинённость");
             return GeneralErrors.Failure(ex.Message);
         }
     }
