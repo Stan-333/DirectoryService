@@ -9,9 +9,13 @@ using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure;
 
-public class DirectoryServiceDbContext(IConfiguration configuration) : DbContext
+public class DirectoryServiceDbContext : DbContext
 {
-    private const string DATABASE = "DirectoryServiceDb";
+    public DirectoryServiceDbContext(
+        DbContextOptions<DirectoryServiceDbContext> options)
+        : base(options)
+    {
+    }
 
     public DbSet<Department> Departments => Set<Department>();
 
@@ -23,21 +27,9 @@ public class DirectoryServiceDbContext(IConfiguration configuration) : DbContext
 
     public DbSet<DepartmentPosition> DepartmentPositions => Set<DepartmentPosition>();
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseNpgsql(configuration.GetConnectionString(DATABASE));
-        optionsBuilder.UseLoggerFactory(CreateLoggerFactory());
-    }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("ltree");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DirectoryServiceDbContext).Assembly);
     }
-
-    private static ILoggerFactory CreateLoggerFactory() =>
-        LoggerFactory.Create(builder =>
-        {
-            builder.AddConsole();
-        });
 }

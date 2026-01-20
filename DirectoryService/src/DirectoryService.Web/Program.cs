@@ -25,9 +25,7 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-builder.Services.AddScoped<DirectoryServiceDbContext>(_ => new DirectoryServiceDbContext(builder.Configuration));
-
-builder.Services.AddProgramDependencies();
+builder.Services.AddProgramDependencies(builder.Configuration);
 
 var app = builder.Build();
 
@@ -53,3 +51,9 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 
 app.Run();
+
+// Для получения доступа к классу Program из другого проекта
+namespace DirectoryService.Web
+{
+    public partial class Program;
+}

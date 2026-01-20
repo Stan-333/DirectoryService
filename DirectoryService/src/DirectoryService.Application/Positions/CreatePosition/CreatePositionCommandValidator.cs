@@ -13,10 +13,10 @@ public class CreatePositionCommandValidator : AbstractValidator<CreatePositionCo
         RuleFor(c => c.Request)
             .NotEmpty()
             .WithError(GeneralErrors.ValueIsRequired("Request"));
-        
+
         RuleFor(c => c.Request.Name)
             .MustBeValueObject(PositionName.Create);
-        
+
         RuleFor(c => c.Request.DepartmentIds)
             .NotEmpty()
             .WithError(GeneralErrors.ValueIsRequired("DepartmentIds"))
@@ -26,7 +26,7 @@ public class CreatePositionCommandValidator : AbstractValidator<CreatePositionCo
             .WithError(Error.Validation("value.is.invalid", "Список DepartmentIds содержит пустые id"))
             .Must(ids => ids.Distinct().Count() == ids.Count)
             .WithError(GeneralErrors.ListHasDuplicates("DepartmentIds"));
-        
+
         RuleFor(c => c.Request.Description)
             .MaximumLength(LengthConstants.LENGTH1000)
             .WithError(GeneralErrors.ValueIsInvalid("Description"));
