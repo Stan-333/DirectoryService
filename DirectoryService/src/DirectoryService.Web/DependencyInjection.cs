@@ -5,11 +5,13 @@ namespace DirectoryService.web;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddProgramDependencies(this IServiceCollection services) =>
+    public static IServiceCollection AddProgramDependencies(
+        this IServiceCollection services,
+        IConfiguration configuration) =>
         services
             .AddWebDependencies()
             .AddApplication()
-            .AddInfrastructure();
+            .AddInfrastructure(configuration);
 
     private static IServiceCollection AddWebDependencies(this IServiceCollection services)
     {
