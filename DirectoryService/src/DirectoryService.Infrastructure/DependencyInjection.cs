@@ -5,6 +5,7 @@ using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
 using DirectoryService.Infrastructure.Database;
 using DirectoryService.Infrastructure.Repositories;
+using DirectoryService.Infrastructure.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,10 @@ public static class DependencyInjection
 
         // Unit of Work / Transactions
         services.AddScoped<ITransactionManager, TransactionManager>();
+
+        // Seeding
+        services.AddScoped<ISeeder, DirectorySeeder>();
+
         return services;
     }
 }
