@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using DirectoryService.Application.Abstractions;
+﻿using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
@@ -24,11 +23,18 @@ public static class DependencyInjection
         {
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
 
-            options.UseNpgsql(
-                configuration.GetConnectionString(DATABASE));
-
-            options.UseLoggerFactory(loggerFactory);
+            options
+                .UseLoggerFactory(loggerFactory)
+                .EnableSensitiveDataLogging()
+                .UseNpgsql(configuration.GetConnectionString(DATABASE));
         });
+
+        // Read DbContext abstraction
+        services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<DirectoryServiceDbContext>());
+
+        // Connection factory
+        services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
         // Repositories
         services.AddScoped<ILocationsRepository, LocationsRepository>();

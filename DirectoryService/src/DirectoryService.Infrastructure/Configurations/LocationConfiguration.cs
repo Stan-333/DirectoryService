@@ -18,16 +18,29 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
             .HasConversion(locId => locId.Value, id => new LocationId(id))
             .HasColumnName("location_id");
 
-        builder.Property(l => l.Name)
-            .IsRequired()
-            .HasMaxLength(LocationName.NAME_MAX_LENGTH)
-            .HasColumnName("location_name")
-            .HasConversion(locName => locName.Value, x => LocationName.Create(x).Value);
+        builder.OwnsOne(l => l.Name, nb =>
+        {
+            nb.Property(n => n.Value)
+                .HasColumnName("location_name")
+                .HasMaxLength(LocationName.NAME_MAX_LENGTH)
+                .IsRequired();
 
-        builder.HasIndex(l => l.Name)
-            .HasDatabaseName("idx_location_name")
-            .HasFilter("is_active = true")
-            .IsUnique();
+            nb.HasIndex(n => n.Value)
+                .HasDatabaseName("idx_location_name")
+                .HasFilter("is_active = true")
+                .IsUnique();
+        });
+
+        // builder.Property(l => l.Name)
+        //     .IsRequired()
+        //     .HasMaxLength(LocationName.NAME_MAX_LENGTH)
+        //     .HasColumnName("location_name")
+        //     .HasConversion(locName => locName.Value, x => LocationName.Create(x).Value);
+
+        // builder.HasIndex(l => l.Name.Value)
+        //     .HasDatabaseName("idx_location_name")
+        //     .HasFilter("is_active = true")
+        //     .IsUnique();
 
         builder.ComplexProperty(l => l.Address, ab =>
         {
@@ -55,17 +68,6 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
                 .HasMaxLength(LengthConstants.LENGTH10)
                 .HasColumnName("apartment");
         });
-
-        // Нерабочий вариант индекса (задача на будущее сделать рабочий)
-        // builder.HasIndex(l => new
-        // {
-        //     l.Address.PostalCode,
-        //     l.Address.Region,
-        //     l.Address.City,
-        //     l.Address.Street,
-        //     l.Address.House,
-        //     l.Address.Apartment,
-        // }).HasDatabaseName("idx_location_address").HasFilter("is_active = true").IsUnique();
 
         builder.Property(l => l.Timezone)
             .IsRequired()

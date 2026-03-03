@@ -1,13 +1,8 @@
-using DirectoryService.Application.Locations.CreateLocation;
-using DirectoryService.Contracts.Locations;
-using DirectoryService.Infrastructure;
 using DirectoryService.Infrastructure.Seeding;
 using DirectoryService.web;
 using DirectoryService.web.Middlewares;
-using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using Serilog.Events;
-using Shared.EndpointResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,7 +54,7 @@ app.MapControllers();
 app.Run();
 
 // Для получения доступа к классу Program из другого проекта
-namespace DirectoryService.Web
+namespace DirectoryService.web
 {
     public partial class Program;
 }

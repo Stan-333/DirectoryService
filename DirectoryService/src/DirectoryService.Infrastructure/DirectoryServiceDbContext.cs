@@ -1,15 +1,14 @@
-﻿using DirectoryService.Domain.DepartmentLocations;
+﻿using DirectoryService.Application.Abstractions;
+using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure;
 
-public class DirectoryServiceDbContext : DbContext
+public class DirectoryServiceDbContext : DbContext, IReadDbContext
 {
     public DirectoryServiceDbContext(
         DbContextOptions<DirectoryServiceDbContext> options)
@@ -26,6 +25,16 @@ public class DirectoryServiceDbContext : DbContext
     public DbSet<DepartmentLocation> DepartmentLocations => Set<DepartmentLocation>();
 
     public DbSet<DepartmentPosition> DepartmentPositions => Set<DepartmentPosition>();
+
+    public IQueryable<Department> DepartmentsRead => Set<Department>().AsQueryable().AsNoTracking();
+
+    public IQueryable<Location> LocationsRead => Set<Location>().AsQueryable().AsNoTracking();
+
+    public IQueryable<Position> PositionsRead => Set<Position>().AsQueryable().AsNoTracking();
+
+    public IQueryable<DepartmentPosition> DepartmentPositionsRead => Set<DepartmentPosition>().AsQueryable().AsNoTracking();
+
+    public IQueryable<DepartmentLocation> DepartmentLocationsRead => Set<DepartmentLocation>().AsQueryable().AsNoTracking();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

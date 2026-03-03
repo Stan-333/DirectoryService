@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
-using DirectoryService.Application.Departments.UpdateDepartmentLocations;
 using DirectoryService.Application.Validation;
 using DirectoryService.Domain.Departments;
 using FluentValidation;
