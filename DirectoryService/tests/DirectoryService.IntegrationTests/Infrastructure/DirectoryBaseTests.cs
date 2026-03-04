@@ -1,7 +1,6 @@
 ﻿using DirectoryService.Domain.Locations;
 using DirectoryService.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using TimeZone = System.TimeZone;
 
 namespace DirectoryService.IntegrationTests.Infrastructure;
 

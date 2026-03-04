@@ -1,10 +1,10 @@
-﻿using System.Runtime.CompilerServices;
-using DirectoryService.Application.Abstractions;
+﻿using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
 using DirectoryService.Infrastructure.Database;
 using DirectoryService.Infrastructure.Repositories;
+using DirectoryService.Infrastructure.Seeding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,11 +23,18 @@ public static class DependencyInjection
         {
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
 
-            options.UseNpgsql(
-                configuration.GetConnectionString(DATABASE));
-
-            options.UseLoggerFactory(loggerFactory);
+            options
+                .UseLoggerFactory(loggerFactory)
+                .EnableSensitiveDataLogging()
+                .UseNpgsql(configuration.GetConnectionString(DATABASE));
         });
+
+        // Read DbContext abstraction
+        services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<DirectoryServiceDbContext>());
+
+        // Connection factory
+        services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
         // Repositories
         services.AddScoped<ILocationsRepository, LocationsRepository>();
@@ -36,6 +43,10 @@ public static class DependencyInjection
 
         // Unit of Work / Transactions
         services.AddScoped<ITransactionManager, TransactionManager>();
+
+        // Seeding
+        services.AddScoped<ISeeder, DirectorySeeder>();
+
         return services;
     }
 }

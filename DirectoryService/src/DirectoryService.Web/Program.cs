@@ -1,12 +1,8 @@
-using DirectoryService.Application.Locations.CreateLocation;
-using DirectoryService.Contracts.Locations;
-using DirectoryService.Infrastructure;
+using DirectoryService.Infrastructure.Seeding;
 using DirectoryService.web;
 using DirectoryService.web.Middlewares;
-using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using Serilog.Events;
-using Shared.EndpointResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +34,11 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "DirectoryService"));
+
+    if (args.Contains("--seeding"))
+    {
+        await app.Services.RunSeeding();
+    }
 }
 
 /*app.MapPost(
@@ -53,7 +54,7 @@ app.MapControllers();
 app.Run();
 
 // Для получения доступа к классу Program из другого проекта
-namespace DirectoryService.Web
+namespace DirectoryService.web
 {
     public partial class Program;
 }

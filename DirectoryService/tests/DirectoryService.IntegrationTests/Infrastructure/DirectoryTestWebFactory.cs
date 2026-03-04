@@ -1,6 +1,6 @@
 ﻿using System.Data.Common;
 using DirectoryService.Infrastructure;
-using DirectoryService.Web;
+using DirectoryService.web;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;

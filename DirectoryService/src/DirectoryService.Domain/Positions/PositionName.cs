@@ -1,5 +1,4 @@
 using CSharpFunctionalExtensions;
-using DirectoryService.Domain.Shared;
 using Shared;
 
 namespace DirectoryService.Domain.Positions;

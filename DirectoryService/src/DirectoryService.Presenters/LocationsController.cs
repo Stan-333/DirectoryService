@@ -1,7 +1,9 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Locations.CreateLocation;
-using DirectoryService.Contracts.Locations;
+using DirectoryService.Application.Locations.Queries;
+using DirectoryService.Contracts.Locations.Requests;
+using DirectoryService.Contracts.Locations.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 using Shared.EndpointResults;
@@ -23,5 +25,31 @@ public sealed class LocationsController : ControllerBase
         Result<Guid, Errors> result = await handler.Handle(command, cancellationToken);
 
         return result;
+    }
+
+    [HttpGet]
+    public async Task<Envelope<GetLocationsWithFiltersResponse>> GetByFilters(
+        [FromQuery] GetLocationsWithFiltersRequest request,
+        [FromServices] IQueryHandler<GetLocationsWithFiltersResponse, GetLocationsWithFiltersQuery> handler,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetLocationsWithFiltersQuery(request);
+
+        var result = await handler.Handle(query, cancellationToken);
+
+        return Envelope<GetLocationsWithFiltersResponse>.Ok(result);
+    }
+
+    [HttpGet("dapper")]
+    public async Task<Envelope<GetLocationsWithFiltersResponse>> GetByFiltersDapper(
+        [FromQuery] GetLocationsWithFiltersRequest request,
+        [FromServices] GetLocationsWithFilterHandlerDapper handler,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetLocationsWithFiltersQuery(request);
+
+        var result = await handler.Handle(query, cancellationToken);
+
+        return Envelope<GetLocationsWithFiltersResponse>.Ok(result);
     }
 }

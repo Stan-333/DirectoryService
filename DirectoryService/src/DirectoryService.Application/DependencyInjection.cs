@@ -1,4 +1,5 @@
 ﻿using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Locations.Queries;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,9 +18,18 @@ public static class DependencyInjection
         // services.AddScoped<CreateLocationCommand>();
         var assembly = typeof(DependencyInjection).Assembly;
         services.Scan(scan => scan.FromAssemblies(assembly)
-            .AddClasses(classes => classes.AssignableToAny(typeof(ICommandHandler<,>), typeof(ICommandHandler<>)))
+            .AddClasses(classes =>
+                classes.AssignableToAny(typeof(ICommandHandler<,>), typeof(ICommandHandler<>)))
             .AsSelfWithInterfaces()
             .WithScopedLifetime());
+
+        services.Scan(scan => scan.FromAssemblies(assembly)
+            .AddClasses(classes =>
+                classes.AssignableToAny(typeof(IQueryHandler<,>)))
+            .AsSelfWithInterfaces()
+            .WithScopedLifetime());
+
+        services.AddScoped<GetLocationsWithFilterHandlerDapper>();
 
         return services;
     }
