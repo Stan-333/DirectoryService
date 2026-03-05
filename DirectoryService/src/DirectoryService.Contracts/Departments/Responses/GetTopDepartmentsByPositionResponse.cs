@@ -1,0 +1,3 @@
+﻿namespace DirectoryService.Contracts.Departments.Responses;
+
+public record GetTopDepartmentsByPositionResponse(IReadOnlyList<DepartmentWithPositionCountDto> Departments);

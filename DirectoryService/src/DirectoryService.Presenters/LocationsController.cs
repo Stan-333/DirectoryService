@@ -39,17 +39,4 @@ public sealed class LocationsController : ControllerBase
 
         return Envelope<GetLocationsWithFiltersResponse>.Ok(result);
     }
-
-    [HttpGet("dapper")]
-    public async Task<Envelope<GetLocationsWithFiltersResponse>> GetByFiltersDapper(
-        [FromQuery] GetLocationsWithFiltersRequest request,
-        [FromServices] GetLocationsWithFilterHandlerDapper handler,
-        CancellationToken cancellationToken)
-    {
-        var query = new GetLocationsWithFiltersQuery(request);
-
-        var result = await handler.Handle(query, cancellationToken);
-
-        return Envelope<GetLocationsWithFiltersResponse>.Ok(result);
-    }
 }

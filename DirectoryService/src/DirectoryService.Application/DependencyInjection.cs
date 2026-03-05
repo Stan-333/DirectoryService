@@ -1,5 +1,4 @@
 ﻿using DirectoryService.Application.Abstractions;
-using DirectoryService.Application.Locations.Queries;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,8 +27,6 @@ public static class DependencyInjection
                 classes.AssignableToAny(typeof(IQueryHandler<,>)))
             .AsSelfWithInterfaces()
             .WithScopedLifetime());
-
-        services.AddScoped<GetLocationsWithFilterHandlerDapper>();
 
         return services;
     }
