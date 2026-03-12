@@ -1,5 +1,5 @@
 ﻿using DirectoryService.Application.Departments.UpdateDepartmentLocations;
-using DirectoryService.Contracts.Departments;
+using DirectoryService.Contracts.Departments.Requests;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
