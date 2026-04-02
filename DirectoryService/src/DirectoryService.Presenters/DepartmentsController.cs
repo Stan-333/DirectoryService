@@ -69,4 +69,31 @@ public class DepartmentsController : ControllerBase
 
         return Envelope<GetTopDepartmentsByPositionResponse>.Ok(result);
     }
+
+    [HttpGet("/api/departments/roots")]
+    public async Task<Envelope<GetRootDepartmentsWithChildrenResponse>> GetRootDepartmentsWithChildren(
+        [FromQuery] GetRootDepartmentsWithChildrenRequest request,
+        [FromServices] IQueryHandler<GetRootDepartmentsWithChildrenResponse, GetRootDepartmentsWithChildrenQuery> handler,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetRootDepartmentsWithChildrenQuery(request);
+
+        var result = await handler.Handle(query, cancellationToken);
+
+        return Envelope<GetRootDepartmentsWithChildrenResponse>.Ok(result);
+    }
+
+    [HttpGet("/api/departments/{parentId:guid}/children")]
+    public async Task<Envelope<GetChildrenDepartmentsResponse>> GetChildren(
+        [FromRoute] Guid parentId,
+        [FromQuery] GetChildrenDepartmentsRequest request,
+        [FromServices] IQueryHandler<GetChildrenDepartmentsResponse, GetChildrenDepartmentsQuery> handler,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetChildrenDepartmentsQuery(parentId, request);
+
+        var result = await handler.Handle(query, cancellationToken);
+
+        return Envelope<GetChildrenDepartmentsResponse>.Ok(result);
+    }
 }

@@ -1,0 +1,3 @@
+﻿namespace DirectoryService.Contracts.Departments.Responses;
+
+public record GetRootDepartmentsWithChildrenResponse(IReadOnlyList<DepartmentWithChildrenInfoDto> Departments);
