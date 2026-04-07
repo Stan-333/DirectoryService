@@ -1,4 +1,4 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using Shared;
@@ -99,6 +99,38 @@ public interface IDepartmentRepository
     /// <param name="cancellationToken">Токен отмены.</param>
     /// <returns>Результат обновления.</returns>
     Task<UnitResult<Error>> UpdateDescendantProperties(
+        string oldParentPath,
+        string newParentPath,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Деактивация связанных с подразделением локаций при условии, что они не используется в других активных подразделениях.
+    /// </summary>
+    /// <param name="departmentId">ID подразделения.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Результат выполнения операции.</returns>
+    Task<UnitResult<Error>> SoftDeleteDepartmentLocations(
+        Guid departmentId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Деактивация связанных с подразделением позиций при условии, что они не используется в других активных подразделениях.
+    /// </summary>
+    /// <param name="departmentId">ID подразделения.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Результат выполнения операции.</returns>
+    Task<UnitResult<Error>> SoftDeleteDepartmentPositions(
+        Guid departmentId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Обновление Path у подчинённых подразделений после SoftDelete.
+    /// </summary>
+    /// <param name="oldParentPath">Старый родительский путь.</param>
+    /// <param name="newParentPath">Новый родительский путь.</param>
+    /// <param name="cancellationToken">Токен отмены.</param>
+    /// <returns>Результат обновления.</returns>
+    Task<UnitResult<Error>> UpdateSubPaths(
         string oldParentPath,
         string newParentPath,
         CancellationToken cancellationToken = default);

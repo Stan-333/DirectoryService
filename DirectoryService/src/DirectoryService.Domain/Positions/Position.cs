@@ -22,6 +22,8 @@ public sealed class Position
 
     public DateTime UpdatedAt { get; set; }
 
+    public DateTime? DeletedAt { get; set; }
+
     public IReadOnlyList<DepartmentPosition> DepartmentPositions => _departmentPositions;
 
     // EF Core
@@ -70,5 +72,11 @@ public sealed class Position
             DateTime.UtcNow,
             DateTime.UtcNow,
             departmentPositionList);
+    }
+
+    public void SoftDelete()
+    {
+        IsActive = false;
+        DeletedAt = UpdatedAt = DateTime.UtcNow;
     }
 }

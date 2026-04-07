@@ -7,6 +7,8 @@ namespace DirectoryService.Domain.Departments;
 
 public sealed class Department
 {
+    private const char PATH_SEPARATOR = '.';
+
     private readonly List<Department> _children = [];
 
     private List<DepartmentLocation> _locations;
@@ -34,6 +36,8 @@ public sealed class Department
     public DateTime CreatedAt { get; private set; }
 
     public DateTime UpdatedAt { get; private set; }
+
+    public DateTime? DeletedAt { get; private set; }
 
     public IReadOnlyList<Department> Children => _children;
 
@@ -74,8 +78,16 @@ public sealed class Department
         _locations = locations.ToList();
     }
 
+    public void SoftDelete()
+    {
+        IsActive = false;
+        int lastSeparatorIndex = Path.LastIndexOf(PATH_SEPARATOR);
+        Path = Path[..(lastSeparatorIndex + 1)] + "deleted_" + Path[(lastSeparatorIndex + 1)..];
+        DeletedAt = UpdatedAt = DateTime.UtcNow;
+    }
+
     /// <summary>
-    /// Обновление родительского подразделение
+    /// Обновление родительского подразделения
     /// </summary>
     /// <param name="parent">Родительское подразделение.</param>
     public void UpdateParent(Department? parent)
@@ -90,7 +102,7 @@ public sealed class Department
         else
         {
             ParentId = parent.Id;
-            Path = $"{parent.Path}.{Identifier.Value}";
+            Path = $"{parent.Path}{PATH_SEPARATOR}{Identifier.Value}";
             Depth = Convert.ToInt16(parent.Depth + 1);
         }
 
@@ -139,7 +151,7 @@ public sealed class Department
                 "Список DepartmentLocations должен содержать хотя бы одну локацию");
         }
 
-        string path = $"{parent.Path}.{identifier.Value}";
+        string path = $"{parent.Path}{PATH_SEPARATOR}{identifier.Value}";
         return new Department(
             departmentId ?? new DepartmentId(Guid.NewGuid()),
             name,
