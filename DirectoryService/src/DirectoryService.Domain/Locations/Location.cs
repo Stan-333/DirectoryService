@@ -22,6 +22,8 @@ public sealed class Location
 
     public DateTime UpdatedAt { get; private set; }
 
+    public DateTime? DeletedAt { get; private set; }
+
     public IReadOnlyList<DepartmentLocation> DepartmentLocations => _departmentLocations;
 
     // EF Core
@@ -48,5 +50,11 @@ public sealed class Location
             id ?? new LocationId(Guid.NewGuid()),
             name, address, timezone, isActive,
             createdAt.ToUniversalTime(), DateTime.UtcNow);
+    }
+
+    public void SoftDelete()
+    {
+        IsActive = false;
+        DeletedAt = UpdatedAt = DateTime.UtcNow;
     }
 }

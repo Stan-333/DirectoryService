@@ -76,6 +76,9 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .IsRequired()
             .HasColumnName("updated_at");
 
+        builder.Property(d => d.DeletedAt)
+            .HasColumnName("deleted_at");
+
         builder.Navigation(d => d.DepartmentLocations)
             .HasField("_locations")
             .UsePropertyAccessMode(PropertyAccessMode.Field);

@@ -13,15 +13,18 @@ namespace DirectoryService.Application.Departments.CreateDepartment;
 public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCommand>
 {
     private readonly IDepartmentRepository _departmentRepository;
+    private readonly ITransactionManager _transactionManager;
     private readonly IValidator<CreateDepartmentCommand> _validator;
     private readonly ILogger<CreateDepartmentHandler> _logger;
 
     public CreateDepartmentHandler(
         IDepartmentRepository departmentRepository,
+        ITransactionManager transactionManager,
         IValidator<CreateDepartmentCommand> validator,
         ILogger<CreateDepartmentHandler> logger)
     {
         _departmentRepository = departmentRepository;
+        _transactionManager = transactionManager;
         _validator = validator;
         _logger = logger;
     }
@@ -68,20 +71,21 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
         }
         else
         {
-            var parent = await _departmentRepository.GetByIdAsync(
+            var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
+            if (transactionScopeResult.IsFailure)
+            {
+                return transactionScopeResult.Error.ToErrors();
+            }
+
+            using var transactionScope = transactionScopeResult.Value;
+
+            var parent = await _departmentRepository.GetByIdWithLockAsync(
                 new DepartmentId(command.Request.ParentId.Value), cancellationToken);
 
             if (parent.IsFailure)
             {
+                transactionScope.Rollback();
                 return parent.Error.ToErrors();
-            }
-
-            if (!parent.Value.IsActive)
-            {
-                return Error.NotFound(
-                    null,
-                    "Родительское подразделение не активно",
-                    parent.Value.Id.Value).ToErrors();
             }
 
             department = Department.CreateChild(
@@ -90,6 +94,35 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
                 parent.Value,
                 departmentLocations,
                 departmentId);
+
+            if (department.IsFailure)
+            {
+                transactionScope.Rollback();
+                return department.Error.ToErrors();
+            }
+
+            await _departmentRepository.AddAsync(department.Value, cancellationToken);
+
+            var saveChildChangeResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+            if (saveChildChangeResult.IsFailure)
+            {
+                transactionScope.Rollback();
+                return saveChildChangeResult.Error.ToErrors();
+            }
+
+            var commitResult = transactionScope.Commit();
+            if (commitResult.IsFailure)
+            {
+                transactionScope.Rollback();
+                return commitResult.Error.ToErrors();
+            }
+
+            _logger.LogInformation(
+                "Подразделение {DepartmentName} создано с id {DepartmentId}",
+                department.Value.Name.Value,
+                department.Value.Id.Value);
+
+            return department.Value.Id.Value;
         }
 
         if (department.IsFailure)

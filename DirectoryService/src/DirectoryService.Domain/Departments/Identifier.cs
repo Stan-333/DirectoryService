@@ -20,7 +20,7 @@ public sealed record Identifier
     {
         if (string.IsNullOrWhiteSpace(value))
             return GeneralErrors.ValueIsRequired("identifier");
-        if (!Regex.IsMatch(value, $"^[a-zA-Z]{{{MIN_LENGTH},{MAX_LENGTH}}}$"))
+        if (!Regex.IsMatch(value, $"^[a-zA-Z_]{{{MIN_LENGTH},{MAX_LENGTH}}}$"))
             return GeneralErrors.ValueIsInvalid("identifier");
         return new Identifier(value);
     }

@@ -24,22 +24,28 @@ public class GetTopDepartmentsByPositionHandler
         parameters.Add("RowsCount", query.Request.RowsCount);
         var departmentsDto = await connection.QueryAsync<DepartmentWithPositionCountDto>(
             $"""
-            WITH top_five AS (SELECT 
-              department_positions.department_id,
-              COUNT(*) AS position_count
-            FROM department_positions
-            GROUP BY department_positions.department_id
-            ORDER BY position_count DESC
-            LIMIT @RowsCount)
+            WITH top_five AS (
+                SELECT
+                    department_positions.department_id,
+                    COUNT(*) AS position_count
+                FROM department_positions
+                    INNER JOIN positions ON department_positions.position_id = positions.position_id
+                    INNER JOIN departments ON department_positions.department_id = departments.department_id
+                WHERE positions.is_active = true
+                  AND departments.is_active = true
+                GROUP BY department_positions.department_id
+                ORDER BY position_count DESC
+                LIMIT @RowsCount
+            )
             SELECT
-              departments.department_id,
-              departments.department_name,
-              departments."path",
-              departments.created_at,
-              top_five.position_count
-            FROM 
-              top_five 
-              INNER JOIN departments ON top_five.department_id = departments.department_id
+                departments.department_id,
+                departments.department_name,
+                departments."path",
+                departments.created_at,
+                top_five.position_count
+            FROM top_five
+                INNER JOIN departments ON top_five.department_id = departments.department_id
+            WHERE departments.is_active = true
             ORDER BY top_five.position_count DESC, departments.department_name;
             """,
             param: parameters);
