@@ -1,7 +1,8 @@
-﻿using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using DirectoryService.Application.Locations;
 using DirectoryService.Application.Positions;
+using DirectoryService.Infrastructure.BackgroundServices;
 using DirectoryService.Infrastructure.Database;
 using DirectoryService.Infrastructure.Repositories;
 using DirectoryService.Infrastructure.Seeding;
@@ -18,6 +19,8 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.Configure<DepartmentCleanupOptions>(configuration.GetSection(DepartmentCleanupOptions.SECTION_NAME));
+
         // DbContext
         services.AddDbContext<DirectoryServiceDbContext>((sp, options) =>
         {
@@ -46,6 +49,10 @@ public static class DependencyInjection
 
         // Seeding
         services.AddScoped<ISeeder, DirectorySeeder>();
+
+        // CleanupService
+        services.AddScoped<IDepartmentCleanupService, DepartmentCleanupService>();
+        services.AddHostedService<DepartmentCleanupBackgroundService>();
 
         return services;
     }
