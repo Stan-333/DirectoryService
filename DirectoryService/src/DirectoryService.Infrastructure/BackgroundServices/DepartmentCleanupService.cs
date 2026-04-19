@@ -1,5 +1,4 @@
 using Dapper;
-using DirectoryService.Domain.Departments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
@@ -25,154 +24,114 @@ public sealed class DepartmentCleanupService : IDepartmentCleanupService
 
     public async Task<int> CleanupExpiredDepartmentsAsync(CancellationToken cancellationToken = default)
     {
-        var threshold = DateTime.UtcNow.AddMonths(-_options.RetentionMonths);
+        DateTime threshold = DateTime.UtcNow.AddMonths(-_options.RetentionMonths);
 
-        var departmentIds = await _dbContext.Departments
-            .AsNoTracking()
-            .Where(d => !d.IsActive && d.DeletedAt.HasValue && d.DeletedAt <= threshold)
-            .OrderBy(d => d.Depth)
-            .Select(d => d.Id)
-            .ToListAsync(cancellationToken);
+        await using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        int deletedCount = 0;
-        foreach (var departmentId in departmentIds)
+        const string sql = """
+                           WITH 
+                           -- находим подразделения-кандидаты на физическое удаление
+                           candidates AS (
+                               SELECT
+                                   d.department_id,
+                                   d.path
+                               FROM departments AS d
+                               WHERE d.is_active = FALSE
+                                 AND d.deleted_at <= @threshold
+                           ),
+                           -- находим живые подразделения, которые находятся внутри удаляемых веток
+                           affected_departments AS (
+                               SELECT
+                                   d.department_id,
+                                   d.path
+                               FROM departments AS d
+                               LEFT JOIN candidates AS candidate
+                                   ON candidate.department_id = d.department_id
+                               WHERE candidate.department_id IS NULL
+                                 AND EXISTS (
+                                     SELECT 1
+                                     FROM candidates AS candidate_ancestor
+                                     WHERE candidate_ancestor.path @> d.path
+                                 )
+                           ),
+                           -- для каждого живого подразделения заново вычисляем новые parent_id, path и depth
+                           recalculated_departments AS (
+                               SELECT
+                                   affected.department_id,
+                                   path_info.new_parent_id,
+                                   path_info.new_path,
+                                   path_info.new_depth
+                               FROM affected_departments AS affected
+                               CROSS JOIN LATERAL (
+                                   SELECT
+                                       string_agg(
+                                           ancestor.identifier,
+                                           '.'
+                                           ORDER BY nlevel(ancestor.path), ancestor.path) AS new_path,
+                                       (COUNT(*) - 1)::smallint AS new_depth,
+                                       (array_agg(
+                                           ancestor.department_id
+                                           ORDER BY nlevel(ancestor.path), ancestor.path))[COUNT(*) - 1] AS new_parent_id
+                                   FROM departments AS ancestor
+                                   WHERE ancestor.path @> affected.path
+                                     AND NOT EXISTS (
+                                         SELECT 1
+                                         FROM candidates AS deleted_ancestor
+                                         WHERE deleted_ancestor.department_id = ancestor.department_id
+                                     )
+                               ) AS path_info
+                           ),
+                           updated_departments AS (
+                               UPDATE departments AS d
+                               SET parent_id = recalculated.new_parent_id,
+                                   path = recalculated.new_path::ltree,
+                                   depth = recalculated.new_depth,
+                                   updated_at = now()
+                               FROM recalculated_departments AS recalculated
+                               WHERE d.department_id = recalculated.department_id
+                               RETURNING d.department_id
+                           ),
+                           deleted_departments AS (
+                               DELETE FROM departments AS d
+                               USING candidates AS candidate
+                               WHERE d.department_id = candidate.department_id
+                               RETURNING d.department_id
+                           )
+                           SELECT
+                               (SELECT COUNT(*) FROM updated_departments) AS updated_count,
+                               (SELECT COUNT(*) FROM deleted_departments) AS deleted_count;
+                           """;
+
+        try
         {
-            try
-            {
-                if (await DeleteDepartmentAsync(departmentId, threshold, cancellationToken))
-                {
-                    deletedCount++;
-                }
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(
-                    exception,
-                    "Ошибка при физическом удалении подразделения {DepartmentId} во время фоновой очистки",
-                    departmentId);
-            }
+            CleanupResult result = await _dbContext.Database.GetDbConnection().QuerySingleAsync<CleanupResult>(
+                new CommandDefinition(
+                    sql,
+                    new { threshold },
+                    transaction: transaction.GetDbTransaction(),
+                    cancellationToken: cancellationToken));
+
+            await transaction.CommitAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Фоновая очистка подразделений завершена. Обновлено записей: {UpdatedCount}. Удалено записей: {DeletedCount}",
+                result.UpdatedCount,
+                result.DeletedCount);
+
+            return Convert.ToInt32(result.DeletedCount);
         }
-
-        return deletedCount;
-    }
-
-    private async Task<bool> DeleteDepartmentAsync(
-        DepartmentId departmentId,
-        DateTime threshold,
-        CancellationToken cancellationToken)
-    {
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-        var department = await _dbContext.Departments
-            .SingleOrDefaultAsync(d => d.Id == departmentId && !d.IsActive, cancellationToken);
-
-        if (department?.DeletedAt is null || department.DeletedAt > threshold)
+        catch (Exception exception)
         {
             await transaction.RollbackAsync(cancellationToken);
-            return false;
+            _logger.LogError(exception, "Ошибка пакетной очистки подразделений");
+            throw;
         }
-
-        await LockDepartmentTreeAsync(department.Path, transaction, cancellationToken);
-
-        string oldPath = department.Path;
-        var newParentId = department.ParentId?.Value;
-        string? newParentPath = null;
-
-        if (department.ParentId is not null)
-        {
-            newParentPath = await _dbContext.Departments
-                .Where(d => d.Id == department.ParentId)
-                .Select(d => d.Path)
-                .SingleAsync(cancellationToken);
-        }
-
-        await ReparentDirectChildrenAsync(departmentId.Value, newParentId, transaction, cancellationToken);
-        await UpdateDescendantPathsAsync(oldPath, newParentPath, transaction, cancellationToken);
-
-        _dbContext.Departments.Remove(department);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-
-        _logger.LogInformation(
-            "Физически удалено подразделение {DepartmentId}. Новый родитель для дочерних подразделений: {ParentId}",
-            departmentId.Value,
-            newParentId);
-
-        return true;
     }
 
-    private async Task LockDepartmentTreeAsync(
-        string departmentPath,
-        IDbContextTransaction transaction,
-        CancellationToken cancellationToken)
+    private sealed class CleanupResult
     {
-        const string sql = """
-                           SELECT 1
-                           FROM departments
-                           WHERE path <@ @departmentPath::ltree
-                           FOR UPDATE;
-                           """;
+        public long UpdatedCount { get; init; }
 
-        var command = new CommandDefinition(
-            sql,
-            new { departmentPath },
-            transaction: transaction.GetDbTransaction(),
-            cancellationToken: cancellationToken);
-
-        await _dbContext.Database.GetDbConnection().ExecuteAsync(command);
-    }
-
-    private async Task ReparentDirectChildrenAsync(
-        Guid departmentId,
-        Guid? newParentId,
-        IDbContextTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        const string sql = """
-                           UPDATE departments
-                           SET parent_id = @newParentId,
-                               updated_at = now()
-                           WHERE parent_id = @departmentId;
-                           """;
-
-        var command = new CommandDefinition(
-            sql,
-            new { departmentId, newParentId },
-            transaction: transaction.GetDbTransaction(),
-            cancellationToken: cancellationToken);
-
-        await _dbContext.Database.GetDbConnection().ExecuteAsync(command);
-    }
-
-    private async Task UpdateDescendantPathsAsync(
-        string oldPath,
-        string? newParentPath,
-        IDbContextTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        const string sql = """
-                           UPDATE departments
-                           SET path = CASE
-                                          WHEN @newParentPath IS NULL
-                                              THEN subpath(path, nlevel(@oldPath::ltree))
-                                          ELSE (@newParentPath::text || '.' || subpath(path, nlevel(@oldPath::ltree))::text)::ltree
-                                      END,
-                               depth = CASE
-                                           WHEN @newParentPath IS NULL
-                                               THEN nlevel(subpath(path, nlevel(@oldPath::ltree))) - 1
-                                           ELSE nlevel((@newParentPath::text || '.' || subpath(path, nlevel(@oldPath::ltree))::text)::ltree) - 1
-                                       END,
-                               updated_at = now()
-                           WHERE path <@ @oldPath::ltree
-                             AND path <> @oldPath::ltree;
-                           """;
-
-        var command = new CommandDefinition(
-            sql,
-            new { oldPath, newParentPath },
-            transaction: transaction.GetDbTransaction(),
-            cancellationToken: cancellationToken);
-
-        await _dbContext.Database.GetDbConnection().ExecuteAsync(command);
+        public long DeletedCount { get; init; }
     }
 }
