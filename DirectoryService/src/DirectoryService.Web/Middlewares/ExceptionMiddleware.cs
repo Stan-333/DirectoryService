@@ -3,7 +3,7 @@ using DirectoryService.Application.Exceptions;
 using Shared;
 using Shared.EndpointResults;
 
-namespace DirectoryService.web.Middlewares;
+namespace DirectoryService.Web.Middlewares;
 
 public class ExceptionMiddleware
 {
