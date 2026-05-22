@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.Departments;
@@ -9,13 +9,30 @@ namespace DirectoryService.Application.Departments.Queries;
 public class GetChildrenDepartmentsHandler : IQueryHandler<GetChildrenDepartmentsResponse, GetChildrenDepartmentsQuery>
 {
     private readonly IDbConnectionFactory _dbConnectionFactory;
+    private readonly ICacheService _cacheService;
 
-    public GetChildrenDepartmentsHandler(IDbConnectionFactory dbConnectionFactory)
+    public GetChildrenDepartmentsHandler(
+        IDbConnectionFactory dbConnectionFactory,
+        ICacheService cacheService)
     {
         _dbConnectionFactory = dbConnectionFactory;
+        _cacheService = cacheService;
     }
 
     public async Task<GetChildrenDepartmentsResponse> Handle(
+        GetChildrenDepartmentsQuery query,
+        CancellationToken cancellationToken)
+    {
+        string cacheKey = DepartmentsCache.ChildrenKey(query.ParentId, query.Request);
+
+        return await _cacheService.GetOrCreateAsync(
+            cacheKey,
+            ct => LoadAsync(query, ct),
+            tags: DepartmentsCache.Tags,
+            cancellationToken: cancellationToken);
+    }
+
+    private async ValueTask<GetChildrenDepartmentsResponse> LoadAsync(
         GetChildrenDepartmentsQuery query,
         CancellationToken cancellationToken)
     {

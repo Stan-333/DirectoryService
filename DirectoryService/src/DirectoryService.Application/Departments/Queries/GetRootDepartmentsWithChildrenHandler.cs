@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.Departments;
@@ -10,13 +10,30 @@ public class GetRootDepartmentsWithChildrenHandler
     : IQueryHandler<GetRootDepartmentsWithChildrenResponse, GetRootDepartmentsWithChildrenQuery>
 {
     private readonly IDbConnectionFactory _dbConnectionFactory;
+    private readonly ICacheService _cacheService;
 
-    public GetRootDepartmentsWithChildrenHandler(IDbConnectionFactory dbConnectionFactory)
+    public GetRootDepartmentsWithChildrenHandler(
+        IDbConnectionFactory dbConnectionFactory,
+        ICacheService cacheService)
     {
         _dbConnectionFactory = dbConnectionFactory;
+        _cacheService = cacheService;
     }
 
     public async Task<GetRootDepartmentsWithChildrenResponse> Handle(
+        GetRootDepartmentsWithChildrenQuery query,
+        CancellationToken cancellationToken)
+    {
+        string cacheKey = DepartmentsCache.RootsWithChildrenKey(query.Request);
+
+        return await _cacheService.GetOrCreateAsync(
+            cacheKey,
+            ct => LoadAsync(query, ct),
+            tags: DepartmentsCache.Tags,
+            cancellationToken: cancellationToken);
+    }
+
+    private async ValueTask<GetRootDepartmentsWithChildrenResponse> LoadAsync(
         GetRootDepartmentsWithChildrenQuery query,
         CancellationToken cancellationToken)
     {
@@ -46,9 +63,9 @@ public class GetRootDepartmentsWithChildrenHandler
             SELECT *,
                    (EXISTS(SELECT 1 FROM departments WHERE parent_id = roots.department_id OFFSET @child_limit LIMIT 1)) AS has_more_children
             FROM roots
-            
+
             UNION ALL
-            
+
             -- получаем дочерние подразделения
             SELECT c.*,
                    (EXISTS(SELECT 1 FROM departments WHERE parent_id = c.department_id)) AS has_more_children

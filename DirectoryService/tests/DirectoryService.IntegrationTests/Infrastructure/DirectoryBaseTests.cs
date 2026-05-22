@@ -1,4 +1,6 @@
-﻿using DirectoryService.Domain.Locations;
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
+using DirectoryService.Domain.Locations;
 using DirectoryService.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,6 +33,7 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
     public async Task DisposeAsync()
     {
         await _resetDatabase();
+        await ResetCacheAsync();
     }
 
     protected async Task<T> ExecuteInDb<T>(Func<DirectoryServiceDbContext, Task<T>> action)
@@ -103,5 +106,19 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
 
             return locations;
         });
+    }
+
+    // Сбрасываем L1+L2 кэш по тегу "departments" между тестами,
+    // чтобы кэшированные ответы одного теста не утекали в другой.
+    private async Task ResetCacheAsync()
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var cache = scope.ServiceProvider.GetService<ICacheService>();
+        if (cache is null)
+        {
+            return;
+        }
+
+        await cache.RemoveByTagAsync(DepartmentsCache.Tag);
     }
 }

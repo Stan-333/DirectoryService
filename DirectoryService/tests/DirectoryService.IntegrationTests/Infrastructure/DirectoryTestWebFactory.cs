@@ -1,15 +1,17 @@
-﻿using System.Data.Common;
+using System.Data.Common;
 using DirectoryService.Infrastructure;
 using DirectoryService.Web;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
 using Respawn;
 using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
 
 namespace DirectoryService.IntegrationTests.Infrastructure;
 
@@ -25,6 +27,10 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
         .WithPassword("postgres")
         .Build();
 
+    private readonly RedisContainer _redisContainer = new RedisBuilder()
+        .WithImage("redis:7-alpine")
+        .Build();
+
     private Respawner _respawner = null!;
     private DbConnection _dbConnection = null!;
 
@@ -32,6 +38,7 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
     public async Task InitializeAsync()
     {
         await _dbContainer.StartAsync();
+        await _redisContainer.StartAsync();
 
         await using var scope = Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<DirectoryServiceDbContext>();
@@ -53,8 +60,10 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
         await _dbContainer.StopAsync();
         await _dbContainer.DisposeAsync();
 
+        await _redisContainer.StopAsync();
+        await _redisContainer.DisposeAsync();
+
         await _dbConnection.CloseAsync();
-        await _dbContainer.DisposeAsync();
     }
 
     public async Task ResetDatabaseAsync()
@@ -64,6 +73,18 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Подменяем строки подключения до того, как сработает DI приложения, —
+        // иначе AddCache словит значение из appsettings.json (localhost:6379)
+        // и попытается подключиться к Redis вне testcontainer.
+        builder.ConfigureAppConfiguration((_, config) =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:Redis"] = _redisContainer.GetConnectionString(),
+                ["Caching:Enabled"] = "true",
+            });
+        });
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<DbContextOptions<DirectoryServiceDbContext>>();

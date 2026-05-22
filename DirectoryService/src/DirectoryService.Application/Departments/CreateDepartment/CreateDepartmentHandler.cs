@@ -1,5 +1,6 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Application.Validation;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Departments;
@@ -15,17 +16,20 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ITransactionManager _transactionManager;
     private readonly IValidator<CreateDepartmentCommand> _validator;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<CreateDepartmentHandler> _logger;
 
     public CreateDepartmentHandler(
         IDepartmentRepository departmentRepository,
         ITransactionManager transactionManager,
         IValidator<CreateDepartmentCommand> validator,
+        ICacheService cacheService,
         ILogger<CreateDepartmentHandler> logger)
     {
         _departmentRepository = departmentRepository;
         _transactionManager = transactionManager;
         _validator = validator;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -117,6 +121,8 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
                 return commitResult.Error.ToErrors();
             }
 
+            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
+
             _logger.LogInformation(
                 "Подразделение {DepartmentName} создано с id {DepartmentId}",
                 department.Value.Name.Value,
@@ -137,6 +143,8 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
         {
             return saveChangeResult.Error;
         }
+
+        await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
 
         _logger.LogInformation(
             "Подразделение {DepartmentName} создано с id {DepartmentId}",

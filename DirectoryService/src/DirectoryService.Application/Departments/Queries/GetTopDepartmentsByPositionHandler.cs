@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Contracts.Departments.Responses;
@@ -9,13 +9,30 @@ public class GetTopDepartmentsByPositionHandler
     : IQueryHandler<GetTopDepartmentsByPositionResponse, GetTopDepartmentsByPositionQuery>
 {
     private readonly IDbConnectionFactory _dbConnectionFactory;
+    private readonly ICacheService _cacheService;
 
-    public GetTopDepartmentsByPositionHandler(IDbConnectionFactory dbConnectionFactory)
+    public GetTopDepartmentsByPositionHandler(
+        IDbConnectionFactory dbConnectionFactory,
+        ICacheService cacheService)
     {
         _dbConnectionFactory = dbConnectionFactory;
+        _cacheService = cacheService;
     }
 
     public async Task<GetTopDepartmentsByPositionResponse> Handle(
+        GetTopDepartmentsByPositionQuery query,
+        CancellationToken cancellationToken)
+    {
+        string cacheKey = DepartmentsCache.TopByPositionKey(query.Request);
+
+        return await _cacheService.GetOrCreateAsync(
+            cacheKey,
+            ct => LoadAsync(query, ct),
+            tags: DepartmentsCache.Tags,
+            cancellationToken: cancellationToken);
+    }
+
+    private async ValueTask<GetTopDepartmentsByPositionResponse> LoadAsync(
         GetTopDepartmentsByPositionQuery query,
         CancellationToken cancellationToken)
     {
