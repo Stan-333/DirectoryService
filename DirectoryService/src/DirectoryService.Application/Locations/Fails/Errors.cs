@@ -1,4 +1,4 @@
-﻿using Shared;
+using Shared;
 
 namespace DirectoryService.Application.Locations.Fails;
 

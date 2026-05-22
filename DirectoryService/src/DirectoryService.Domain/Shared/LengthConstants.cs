@@ -1,4 +1,4 @@
-﻿namespace DirectoryService.Domain.Shared;
+namespace DirectoryService.Domain.Shared;
 
 public readonly struct LengthConstants
 {

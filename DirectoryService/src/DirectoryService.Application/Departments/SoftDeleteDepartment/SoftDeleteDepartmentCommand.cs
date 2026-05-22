@@ -1,4 +1,4 @@
-﻿using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions;
 
 namespace DirectoryService.Application.Departments.SoftDeleteDepartment;
 

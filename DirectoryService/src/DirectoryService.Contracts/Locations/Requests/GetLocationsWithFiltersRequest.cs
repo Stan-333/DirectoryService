@@ -1,4 +1,4 @@
-﻿namespace DirectoryService.Contracts.Locations.Requests;
+namespace DirectoryService.Contracts.Locations.Requests;
 
 public record GetLocationsWithFiltersRequest(
     string? Search,

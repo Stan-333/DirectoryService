@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

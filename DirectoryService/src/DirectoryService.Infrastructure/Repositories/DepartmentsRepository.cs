@@ -1,4 +1,4 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Departments;
 using DirectoryService.Domain.DepartmentLocations;

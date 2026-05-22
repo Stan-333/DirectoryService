@@ -1,4 +1,4 @@
-﻿namespace DirectoryService.Contracts.Departments.Requests;
+namespace DirectoryService.Contracts.Departments.Requests;
 
 public record GetChildrenDepartmentsRequest(
     int Page = 1,

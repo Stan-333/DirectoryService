@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Shared;
 
 namespace DirectoryService.Application.Exceptions;
