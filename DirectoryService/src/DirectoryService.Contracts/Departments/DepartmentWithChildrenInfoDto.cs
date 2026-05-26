@@ -1,4 +1,4 @@
-﻿namespace DirectoryService.Contracts.Departments;
+namespace DirectoryService.Contracts.Departments;
 
 public record DepartmentWithChildrenInfoDto
 {

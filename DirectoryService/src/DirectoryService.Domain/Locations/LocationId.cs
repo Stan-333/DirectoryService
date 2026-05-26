@@ -1,3 +1,3 @@
-﻿namespace DirectoryService.Domain.Locations;
+namespace DirectoryService.Domain.Locations;
 
 public record LocationId(Guid Value);

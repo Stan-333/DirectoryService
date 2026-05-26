@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Contracts.Locations.Responses;

@@ -1,4 +1,4 @@
-﻿namespace DirectoryService.Infrastructure.Seeding;
+namespace DirectoryService.Infrastructure.Seeding;
 
 public interface ISeeder
 {

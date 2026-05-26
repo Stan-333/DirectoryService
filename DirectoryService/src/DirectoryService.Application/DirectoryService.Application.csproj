@@ -13,6 +13,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <InternalsVisibleTo Include="DirectoryService.UnitTests" />
+      <InternalsVisibleTo Include="DirectoryService.IntegrationTests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="Dapper" />
       <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
       <PackageReference Include="Microsoft.EntityFrameworkCore" />

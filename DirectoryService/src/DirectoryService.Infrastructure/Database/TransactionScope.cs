@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using Microsoft.Extensions.Logging;

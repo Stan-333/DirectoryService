@@ -1,4 +1,4 @@
-﻿using DirectoryService.Infrastructure;
+using DirectoryService.Infrastructure;
 using DirectoryService.Infrastructure.Seeding;
 using DirectoryService.Web;
 using DirectoryService.Web.Middlewares;

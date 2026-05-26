@@ -1,4 +1,4 @@
-﻿using DirectoryService.Domain.DepartmentPositions;
+using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Positions;
 using Microsoft.EntityFrameworkCore;

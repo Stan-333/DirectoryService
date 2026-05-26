@@ -1,4 +1,4 @@
-﻿using DirectoryService.Application;
+using DirectoryService.Application;
 using DirectoryService.Infrastructure;
 
 namespace DirectoryService.Web;

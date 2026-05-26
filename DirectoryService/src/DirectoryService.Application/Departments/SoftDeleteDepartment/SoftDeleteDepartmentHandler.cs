@@ -1,5 +1,6 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Application.Validation;
 using DirectoryService.Domain.Departments;
 using FluentValidation;
@@ -13,17 +14,20 @@ public class SoftDeleteDepartmentHandler : ICommandHandler<Guid, SoftDeleteDepar
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ITransactionManager _transactionManager;
     private readonly IValidator<SoftDeleteDepartmentCommand> _validator;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<SoftDeleteDepartmentHandler> _logger;
 
     public SoftDeleteDepartmentHandler(
         IDepartmentRepository departmentRepository,
         ITransactionManager transactionManager,
         IValidator<SoftDeleteDepartmentCommand> validator,
+        ICacheService cacheService,
         ILogger<SoftDeleteDepartmentHandler> logger)
     {
         _departmentRepository = departmentRepository;
         _transactionManager = transactionManager;
         _validator = validator;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -103,6 +107,8 @@ public class SoftDeleteDepartmentHandler : ICommandHandler<Guid, SoftDeleteDepar
         var commitResult = transactionScope.Commit();
         if (commitResult.IsSuccess)
         {
+            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
+
             _logger.LogInformation(
                 "Подразделение {DepartmentName} (id {DepartmentId}) деактивировано. Данные успешно обновлены.",
                 department.Value.Name.Value,

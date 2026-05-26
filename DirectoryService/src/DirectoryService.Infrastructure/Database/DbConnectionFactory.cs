@@ -1,4 +1,4 @@
-﻿using System.Data.Common;
+using System.Data.Common;
 using DirectoryService.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
 

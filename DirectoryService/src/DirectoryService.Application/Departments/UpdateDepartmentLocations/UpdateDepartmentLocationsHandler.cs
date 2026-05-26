@@ -1,5 +1,6 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Application.Validation;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Departments;
@@ -15,17 +16,20 @@ public class UpdateDepartmentLocationsHandler : ICommandHandler<Guid, UpdateDepa
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ITransactionManager _transactionManager;
     private readonly IValidator<UpdateDepartmentLocationsCommand> _validator;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<UpdateDepartmentLocationsHandler> _logger;
 
     public UpdateDepartmentLocationsHandler(
         IDepartmentRepository departmentRepository,
         ITransactionManager transactionManager,
         IValidator<UpdateDepartmentLocationsCommand> validator,
+        ICacheService cacheService,
         ILogger<UpdateDepartmentLocationsHandler> logger)
     {
         _departmentRepository = departmentRepository;
         _transactionManager = transactionManager;
         _validator = validator;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -100,6 +104,8 @@ public class UpdateDepartmentLocationsHandler : ICommandHandler<Guid, UpdateDepa
 
         if (commitResult.IsSuccess)
         {
+            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
+
             _logger.LogInformation(
                 "У подразделения {DepartmentName} (id {DepartmentId}) локации успешно обновлены",
                 department.Value.Name.Value,

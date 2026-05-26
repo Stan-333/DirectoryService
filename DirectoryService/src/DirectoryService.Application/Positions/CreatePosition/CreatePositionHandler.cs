@@ -1,5 +1,6 @@
-﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Application.Validation;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Departments;
@@ -14,15 +15,18 @@ public class CreatePositionHandler : ICommandHandler<Guid, CreatePositionCommand
 {
     private readonly IPositionRepository _positionRepository;
     private readonly IValidator<CreatePositionCommand> _validator;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<CreatePositionHandler> _logger;
 
     public CreatePositionHandler(
         IPositionRepository positionRepository,
         IValidator<CreatePositionCommand> validator,
+        ICacheService cacheService,
         ILogger<CreatePositionHandler> logger)
     {
         _positionRepository = positionRepository;
         _validator = validator;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -68,6 +72,10 @@ public class CreatePositionHandler : ICommandHandler<Guid, CreatePositionCommand
         {
             return saveChangeResult.Error;
         }
+
+        // Кэш departments хранит и top-by-position, который считает позиции по department_positions.
+        // Создание новой позиции с привязками меняет статистику — инвалидируем тег.
+        await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
 
         _logger.LogInformation(
             "Position {PositionName} created with id {PositionId}",

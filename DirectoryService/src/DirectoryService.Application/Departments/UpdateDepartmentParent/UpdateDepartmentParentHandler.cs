@@ -1,6 +1,7 @@
-﻿using System.Data;
+using System.Data;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Application.Validation;
 using DirectoryService.Domain.Departments;
 using FluentValidation;
@@ -14,17 +15,20 @@ public class UpdateDepartmentParentHandler : ICommandHandler<Guid, UpdateDepartm
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ITransactionManager _transactionManager;
     private readonly IValidator<UpdateDepartmentParentCommand> _validator;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<UpdateDepartmentParentHandler> _logger;
 
     public UpdateDepartmentParentHandler(
         IDepartmentRepository departmentRepository,
         ITransactionManager transactionManager,
         IValidator<UpdateDepartmentParentCommand> validator,
+        ICacheService cacheService,
         ILogger<UpdateDepartmentParentHandler> logger)
     {
         _departmentRepository = departmentRepository;
         _transactionManager = transactionManager;
         _validator = validator;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -138,6 +142,8 @@ public class UpdateDepartmentParentHandler : ICommandHandler<Guid, UpdateDepartm
         var commitResult = transactionScope.Commit();
         if (commitResult.IsSuccess)
         {
+            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
+
             _logger.LogInformation(
                 "У подразделения {DepartmentName} (id {DepartmentId}) изменено родительское подразделение. Данные успешно обновлены.",
                 department.Value.Name.Value,
