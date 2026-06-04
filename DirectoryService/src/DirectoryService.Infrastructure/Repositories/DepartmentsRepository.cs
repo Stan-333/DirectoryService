@@ -60,11 +60,21 @@ public class DepartmentsRepository : IDepartmentRepository
         DepartmentId id,
         CancellationToken cancellationToken)
     {
+        const string sqlCommand = """
+                                  SELECT 1
+                                  FROM departments
+                                  WHERE department_id = @departmentId
+                                    AND is_active = TRUE
+                                  FOR UPDATE;
+                                  """;
+        var command = new CommandDefinition(
+            sqlCommand,
+            new { departmentId = id.Value },
+            transaction: _dbContext.Database.CurrentTransaction?.GetDbTransaction(),
+            cancellationToken: cancellationToken);
         try
         {
-            await _dbContext.Database.ExecuteSqlAsync(
-                $"SELECT 1 FROM departments WHERE department_id = {id.Value} AND is_active = true FOR UPDATE;",
-                cancellationToken);
+            await _dbContext.Database.GetDbConnection().ExecuteAsync(command);
 
             var department = await _dbContext.Departments
                 .SingleOrDefaultAsync(d => d.Id == id && d.IsActive, cancellationToken);
