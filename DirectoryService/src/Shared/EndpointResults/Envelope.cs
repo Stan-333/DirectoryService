@@ -8,7 +8,7 @@ public record Envelope
 
     public Errors? ErrorList { get; }
 
-    public bool IsError => ErrorList is not null || (ErrorList is not null && ErrorList.Any());
+    public bool IsError => ErrorList is not null && ErrorList.Any();
 
     public DateTime TimeGenerated { get; }
 
@@ -33,7 +33,7 @@ public record Envelope<T>
 
     public Errors? ErrorList { get; }
 
-    public bool IsError => ErrorList is not null || (ErrorList is not null && ErrorList.Any());
+    public bool IsError => ErrorList is not null && ErrorList.Any();
 
     public DateTime TimeGenerated { get; }
 
