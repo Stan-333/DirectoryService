@@ -15,21 +15,17 @@ public sealed class ErrorsResult : IResult {
     {
         ArgumentNullException.ThrowIfNull(httpContext);
 
-        if (!_errors.Any())
-        {
-            httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-            return httpContext.Response.WriteAsJsonAsync(Envelope.Error(_errors));
-        }
-
         var distinctErrorTypes = _errors
             .Select(e => e.Type)
             .Distinct()
             .ToList();
 
-        int statusCode = distinctErrorTypes.Count > 1
-            ? StatusCodes.Status500InternalServerError
-            : GetStatusCodeFromErrorType(distinctErrorTypes.First());
+        int statusCode = distinctErrorTypes.Count switch
+        {
+            0 => StatusCodes.Status500InternalServerError,
+            1 => GetStatusCodeFromErrorType(distinctErrorTypes[0]),
+            _ => StatusCodes.Status500InternalServerError,
+        };
 
         var envelope = Envelope.Error(_errors);
 
