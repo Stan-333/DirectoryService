@@ -1,4 +1,6 @@
 using Dapper;
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
@@ -9,15 +11,18 @@ namespace DirectoryService.Infrastructure.BackgroundServices;
 public sealed class DepartmentCleanupService : IDepartmentCleanupService
 {
     private readonly DirectoryServiceDbContext _dbContext;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<DepartmentCleanupService> _logger;
     private readonly DepartmentCleanupOptions _options;
 
     public DepartmentCleanupService(
         DirectoryServiceDbContext dbContext,
+        ICacheService cacheService,
         IOptions<DepartmentCleanupOptions> options,
         ILogger<DepartmentCleanupService> logger)
     {
         _dbContext = dbContext;
+        _cacheService = cacheService;
         _logger = logger;
         _options = options.Value;
     }
@@ -112,6 +117,14 @@ public sealed class DepartmentCleanupService : IDepartmentCleanupService
                     cancellationToken: cancellationToken));
 
             await transaction.CommitAsync(cancellationToken);
+
+            // Физически изменены/удалены подразделения — кэши departments (roots, children,
+            // top-by-position) ссылаются на устаревшие данные. Инвалидируем тег, только если
+            // что-то реально поменялось, чтобы не дёргать Redis вхолостую.
+            if (result.UpdatedCount + result.DeletedCount > 0)
+            {
+                await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
+            }
 
             _logger.LogInformation(
                 "Фоновая очистка подразделений завершена. Обновлено записей: {UpdatedCount}. Удалено записей: {DeletedCount}",
