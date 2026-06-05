@@ -38,7 +38,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка сохранения изменений в базе данных");
-            return GeneralErrors.Failure(ex.Message).ToErrors();
+            return GeneralErrors.Failure().ToErrors();
         }
     }
 
@@ -86,7 +86,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка получения подразделения {DepartmentId} с блокировкой из базы данных", id.Value);
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -129,7 +129,7 @@ public class DepartmentsRepository : IDepartmentRepository
                 ex,
                 "Ошибка удаления локаций у подразделения с id {DepartmentId}.",
                 departmentId.Value);
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -158,7 +158,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка проверки подразделений на подчинённость");
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -188,7 +188,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка блокировки подчинённых подразделений");
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -221,7 +221,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка обновления path и depth у подчинённых подразделений");
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -266,7 +266,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка деактивации локаций подразделения");
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -311,7 +311,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка деактивации должностей подразделения");
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -340,7 +340,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка обновления paths у подчинённых подразделений");
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -359,7 +359,7 @@ public class DepartmentsRepository : IDepartmentRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка добавления локаций подразделения в базу данных");
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 }

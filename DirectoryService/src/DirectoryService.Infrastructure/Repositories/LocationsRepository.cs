@@ -50,7 +50,7 @@ public class LocationsRepository : ILocationsRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка сохранения изменений в базе данных");
-            return GeneralErrors.Failure(ex.Message).ToErrors();
+            return GeneralErrors.Failure().ToErrors();
         }
     }
 }
