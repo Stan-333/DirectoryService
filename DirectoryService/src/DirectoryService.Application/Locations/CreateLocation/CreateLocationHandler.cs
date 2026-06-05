@@ -58,7 +58,7 @@ public class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand
             address,
             TimeZone.Create(command.Request.Timezone).Value,
             true,
-            DateTime.Now);
+            DateTime.UtcNow);
 
         await _locationsRepository.AddAsync(location.Value, cancellationToken);
 
