@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure;
@@ -30,11 +31,18 @@ public static class DependencyInjection
         services.AddDbContext<DirectoryServiceDbContext>((sp, options) =>
         {
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            var environment = sp.GetRequiredService<IHostEnvironment>();
 
             options
                 .UseLoggerFactory(loggerFactory)
-                .EnableSensitiveDataLogging()
                 .UseNpgsql(configuration.GetConnectionString(DATABASE));
+
+            // Логирование значений параметров раскрывает чувствительные данные —
+            // включаем только в Development.
+            if (environment.IsDevelopment())
+            {
+                options.EnableSensitiveDataLogging();
+            }
         });
 
         // Read DbContext abstraction
