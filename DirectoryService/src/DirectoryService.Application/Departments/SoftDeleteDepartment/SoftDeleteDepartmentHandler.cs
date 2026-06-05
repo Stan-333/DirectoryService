@@ -116,7 +116,6 @@ public class SoftDeleteDepartmentHandler : ICommandHandler<Guid, SoftDeleteDepar
             return department.Value.Id.Value;
         }
 
-        transactionScope.Rollback();
         return commitResult.Error.ToErrors();
     }
 }

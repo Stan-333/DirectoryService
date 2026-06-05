@@ -117,7 +117,6 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
             var commitResult = transactionScope.Commit();
             if (commitResult.IsFailure)
             {
-                transactionScope.Rollback();
                 return commitResult.Error.ToErrors();
             }
 
