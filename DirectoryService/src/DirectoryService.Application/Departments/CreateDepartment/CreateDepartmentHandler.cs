@@ -44,7 +44,7 @@ public class CreateDepartmentHandler : ICommandHandler<Guid, CreateDepartmentCom
         Identifier identifier = Identifier.Create(command.Request.Identifier).Value;
         if (await _departmentRepository.IsActiveIdentifierExistAsync(identifier, cancellationToken))
         {
-            return Error.Validation(
+            return Error.Conflict(
                 "record.already.exist",
                 "Подразделение с таким идентификатором уже существует")
                 .ToErrors();

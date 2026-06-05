@@ -23,7 +23,7 @@ public static class GeneralErrors
     public static Error AlreadyExist(string? recordName = null)
     {
         string label = recordName is null ? "Запись" : $"Такой '{recordName}'";
-        return Error.Validation("record.already.exist", $"{label} уже существует");
+        return Error.Conflict("record.already.exist", $"{label} уже существует");
     }
 
     public static Error NotFound(Guid? id = null, string? name = null)
