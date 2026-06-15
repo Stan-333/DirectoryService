@@ -44,7 +44,7 @@ public sealed class Location
     public static Result<Location, Error> Create(LocationName name, Address address, TimeZone timezone,
         bool isActive, DateTime createdAt, LocationId? id = null)
     {
-        if (createdAt > DateTime.Now)
+        if (createdAt > DateTime.UtcNow)
             return GeneralErrors.ValueIsInvalid("location");
         return new Location(
             id ?? new LocationId(Guid.NewGuid()),
