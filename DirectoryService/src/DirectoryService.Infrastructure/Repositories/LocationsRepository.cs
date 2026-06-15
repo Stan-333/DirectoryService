@@ -31,7 +31,7 @@ public class LocationsRepository : ILocationsRepository
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Locations.AnyAsync(
-            l => l.Name == locationName && l.IsActive, cancellationToken);
+            l => l.Name.Value == locationName.Value && l.IsActive, cancellationToken);
     }
 
     public async Task<bool> IsActiveAddressExistAsync(Address address, CancellationToken cancellationToken = default)
