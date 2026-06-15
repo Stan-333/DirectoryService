@@ -90,7 +90,7 @@ public class DirectorySeeder : ISeeder
             var positions = new List<Position>();
             for (int i = 0; i < SeedingConstants.POSITION_COUNT; i++)
             {
-                positions.Add(DataGenerator.GenerateRandomPosition(departments));
+                positions.Add(DataGenerator.GenerateRandomPosition(departments, i + 1));
             }
 
             _dbContext.Positions.AddRange(positions);

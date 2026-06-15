@@ -10,8 +10,6 @@ namespace DirectoryService.Infrastructure.Seeding;
 
 public static class DataGenerator
 {
-    private static int _positionCounter = 1;
-
     private static readonly string[] _companyNames =
     [
         "Technology", "Innovation", "Digital", "Software", "Systems", "Solutions",
@@ -134,19 +132,17 @@ public static class DataGenerator
         }
     }
 
-    public static Position GenerateRandomPosition(List<Department> departments)
+    public static Position GenerateRandomPosition(List<Department> departments, int sequenceNumber)
     {
         string title = _positionTitles[Random.Shared.Next(_positionTitles.Length)];
         string description = $"{title} position with various responsibilities";
 
-        // Generate a unique position name with a counter
         string baseName = new string(title.ToLower()
                 .Where(c => c is >= 'a' and <= 'z' or ' ')
                 .ToArray())
             .Replace(" ", "_");
 
-        // Add a unique number to the position name
-        string positionName = $"{baseName}_{_positionCounter++}";
+        string positionName = $"{baseName}_{sequenceNumber}";
 
         var positionId = new PositionId(Guid.NewGuid());
         int departmentCount = Random.Shared.Next(1, Math.Min(SeedingConstants.MAX_DEPARTMENTS_PER_POSITION + 1, departments.Count + 1));
