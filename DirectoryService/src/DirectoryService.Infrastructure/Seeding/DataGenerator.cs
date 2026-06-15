@@ -53,41 +53,37 @@ public static class DataGenerator
         .Take(10)
         .ToArray();
 
-    public static Location GenerateRandomLocation(HashSet<string> usedNames)
+    public static Location GenerateRandomLocation(HashSet<string> usedNames, HashSet<string> usedAddresses)
     {
-        string name;
-        int attempt = 0;
-        const int maxAttempts = 100; // Защита от бесконечного цикла
-
-        // Генерируем уникальное имя
+        string postalCode;
+        string region;
+        string city;
+        string street;
+        string house;
+        string? apartment;
+        string addressKey;
         do
         {
-            string city = _cities[Random.Shared.Next(_cities.Length)];
-            string street = _streets[Random.Shared.Next(_streets.Length)];
-            int number = Random.Shared.Next(1, 200);
-            string suffix = attempt > 0 ? $" #{attempt + 1}" : string.Empty;
-            name = $"{city} Office {street} {number}{suffix}";
-            attempt++;
+            postalCode = Random.Shared.Next(100000, 1000000).ToString();
+            region = "Region " + Random.Shared.Next(1, 100);
+            city = _cities[Random.Shared.Next(_cities.Length)];
+            street = _streets[Random.Shared.Next(_streets.Length)];
+            house = Random.Shared.Next(1, 200).ToString();
+            apartment = Random.Shared.Next(0, 10) > 7 ? Random.Shared.Next(1, 500).ToString() : null;
+            addressKey = $"{postalCode}|{region}|{city}|{street}|{house}|{apartment}";
         }
-        while (usedNames.Contains(name) && attempt < maxAttempts);
+        while (!usedAddresses.Add(addressKey));
 
-        // Если не удалось сгенерировать уникальное имя, добавляем GUID
-        if (usedNames.Contains(name))
+        string baseName = $"{city} Office {street} {house}";
+        string name = baseName;
+        int suffix = 1;
+        while (!usedNames.Add(name))
         {
-            name = $"{name} {Guid.NewGuid().ToString("N")[..8]}";
+            suffix++;
+            name = $"{baseName} #{suffix}";
         }
 
-        usedNames.Add(name);
-
-        // Остальная логика генерации локации
-        string postalCode = Random.Shared.Next(100000, 1000000).ToString();
-        string region = "Region " + Random.Shared.Next(1, 100);
-        string cityName = _cities[Random.Shared.Next(_cities.Length)];
-        string streetName = _streets[Random.Shared.Next(_streets.Length)];
-        string house = Random.Shared.Next(1, 200).ToString();
-        string? apartment = Random.Shared.Next(0, 10) > 7 ?
-            Random.Shared.Next(1, 500).ToString() : null;
-        var address = Address.Create(postalCode, region, cityName, streetName, house, apartment).Value;
+        var address = Address.Create(postalCode, region, city, street, house, apartment).Value;
         var timeZone = TimeZone.Create(_timeZones[Random.Shared.Next(_timeZones.Length)]).Value;
 
         return Location.Create(LocationName.Create(name).Value, address, timeZone, true,

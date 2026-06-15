@@ -51,10 +51,11 @@ public class DirectorySeeder : ISeeder
             _logger.LogInformation("Generating locations...");
             var locations = new List<Location>();
             var usedLocationNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var usedLocationAddresses = new HashSet<string>(StringComparer.Ordinal);
 
             for (int i = 0; i < SeedingConstants.LOCATION_COUNT; i++)
             {
-                locations.Add(DataGenerator.GenerateRandomLocation(usedLocationNames));
+                locations.Add(DataGenerator.GenerateRandomLocation(usedLocationNames, usedLocationAddresses));
             }
 
             _dbContext.Locations.AddRange(locations);
