@@ -20,12 +20,9 @@ public sealed class ErrorsResult : IResult {
             .Distinct()
             .ToList();
 
-        int statusCode = distinctErrorTypes.Count switch
-        {
-            0 => StatusCodes.Status500InternalServerError,
-            1 => GetStatusCodeFromErrorType(distinctErrorTypes[0]),
-            _ => StatusCodes.Status500InternalServerError,
-        };
+        int statusCode = distinctErrorTypes.Count == 1
+            ? GetStatusCodeFromErrorType(distinctErrorTypes[0])
+            : StatusCodes.Status500InternalServerError;
 
         var envelope = Envelope.Error(_errors);
 
