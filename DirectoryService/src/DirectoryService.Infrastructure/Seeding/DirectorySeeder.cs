@@ -1,4 +1,6 @@
 using System.Data;
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
@@ -10,11 +12,16 @@ namespace DirectoryService.Infrastructure.Seeding;
 public class DirectorySeeder : ISeeder
 {
     private readonly DirectoryServiceDbContext _dbContext;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<DirectorySeeder> _logger;
 
-    public DirectorySeeder(DirectoryServiceDbContext dbContext, ILogger<DirectorySeeder> logger)
+    public DirectorySeeder(
+        DirectoryServiceDbContext dbContext,
+        ICacheService cacheService,
+        ILogger<DirectorySeeder> logger)
     {
         _dbContext = dbContext;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -98,7 +105,9 @@ public class DirectorySeeder : ISeeder
             _logger.LogInformation("Created {PositionsCount} positions", positions.Count);
 
             _logger.LogInformation("Committing transaction...");
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
+
+            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
 
             _logger.LogInformation("Seeding completed: {LocationsCount} locations, {DepartmentsCount} departments, {PositionsCount} positions", locations.Count, departments.Count, positions.Count);
         }
