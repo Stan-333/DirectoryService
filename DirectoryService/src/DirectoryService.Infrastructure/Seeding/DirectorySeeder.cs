@@ -64,11 +64,13 @@ public class DirectorySeeder : ISeeder
             _logger.LogInformation("Generating departments...");
             var departments = new List<Department>();
 
+            var usedIdentifiers = new HashSet<string>(StringComparer.Ordinal);
+
             // Создаем корневые департаменты
             int rootDepartmentCount = Math.Max(1, SeedingConstants.DEPARTMENT_COUNT / 3);
             for (int i = 0; i < rootDepartmentCount; i++)
             {
-                departments.Add(DataGenerator.GenerateRandomDepartment(locations));
+                departments.Add(DataGenerator.GenerateRandomDepartment(locations, usedIdentifiers));
             }
 
             // Создаем дочерние департаменты
@@ -76,7 +78,7 @@ public class DirectorySeeder : ISeeder
             for (int i = 0; i < remainingDepartments; i++)
             {
                 var parent = departments[Random.Shared.Next(departments.Count)];
-                departments.Add(DataGenerator.GenerateRandomDepartment(locations, parent));
+                departments.Add(DataGenerator.GenerateRandomDepartment(locations, usedIdentifiers, parent));
             }
 
             _dbContext.Departments.AddRange(departments);
