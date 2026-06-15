@@ -5,6 +5,7 @@ using DirectoryService.Infrastructure;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Shared;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
@@ -101,6 +102,37 @@ public class CreateDepartmentTests : DirectoryBaseTests
 
         // Assert
         Assert.True(result.IsFailure);
+    }
+
+    [Fact]
+    public async Task CreateDepartment_with_duplicate_identifier_should_return_conflict()
+    {
+        // Arrange
+        var cancellationToken = CancellationToken.None;
+        var locationId = await CreateLocationAsync(cancellationToken);
+
+        var first = await ExecuteHandler(sut =>
+        {
+            var command = new CreateDepartmentCommand(
+                new CreateDepartmentRequest("Подразделение", "duplicate", null, [locationId.Value]));
+
+            return sut.Handle(command, cancellationToken);
+        });
+
+        Assert.True(first.IsSuccess);
+
+        // Act
+        var second = await ExecuteHandler(sut =>
+        {
+            var command = new CreateDepartmentCommand(
+                new CreateDepartmentRequest("Другое подразделение", "duplicate", null, [locationId.Value]));
+
+            return sut.Handle(command, cancellationToken);
+        });
+
+        // Assert
+        Assert.True(second.IsFailure);
+        Assert.Contains(second.Error, e => e.Type == ErrorType.CONFLICT);
     }
 
     [Fact]
