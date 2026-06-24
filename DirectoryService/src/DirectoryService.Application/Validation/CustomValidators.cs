@@ -1,6 +1,6 @@
-using System.Text.Json;
 using CSharpFunctionalExtensions;
 using FluentValidation;
+using FluentValidation.Results;
 using Shared;
 
 namespace DirectoryService.Application.Validation;
@@ -17,7 +17,12 @@ public static class CustomValidators
             Result<TValueObject, Error> result = factoryMethod(value);
             if (result.IsFailure)
             {
-                context.AddFailure(JsonSerializer.Serialize<Error>(result.Error));
+                var failure = new ValidationFailure(context.PropertyPath, result.Error.Message)
+                {
+                    ErrorCode = result.Error.Code,
+                    CustomState = result.Error,
+                };
+                context.AddFailure(failure);
             }
         });
     }
@@ -25,6 +30,9 @@ public static class CustomValidators
     public static IRuleBuilderOptions<T, TProperty> WithError<T, TProperty>(
         this IRuleBuilderOptions<T, TProperty> rule, Error error)
     {
-        return rule.WithMessage(JsonSerializer.Serialize<Error>(error));
+        return rule
+            .WithMessage(error.Message)
+            .WithErrorCode(error.Code)
+            .WithState(_ => error);
     }
 }

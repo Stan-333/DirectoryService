@@ -1,4 +1,6 @@
 using System.Data;
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
@@ -10,11 +12,16 @@ namespace DirectoryService.Infrastructure.Seeding;
 public class DirectorySeeder : ISeeder
 {
     private readonly DirectoryServiceDbContext _dbContext;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<DirectorySeeder> _logger;
 
-    public DirectorySeeder(DirectoryServiceDbContext dbContext, ILogger<DirectorySeeder> logger)
+    public DirectorySeeder(
+        DirectoryServiceDbContext dbContext,
+        ICacheService cacheService,
+        ILogger<DirectorySeeder> logger)
     {
         _dbContext = dbContext;
+        _cacheService = cacheService;
         _logger = logger;
     }
 
@@ -51,10 +58,11 @@ public class DirectorySeeder : ISeeder
             _logger.LogInformation("Generating locations...");
             var locations = new List<Location>();
             var usedLocationNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var usedLocationAddresses = new HashSet<string>(StringComparer.Ordinal);
 
             for (int i = 0; i < SeedingConstants.LOCATION_COUNT; i++)
             {
-                locations.Add(DataGenerator.GenerateRandomLocation(usedLocationNames));
+                locations.Add(DataGenerator.GenerateRandomLocation(usedLocationNames, usedLocationAddresses));
             }
 
             _dbContext.Locations.AddRange(locations);
@@ -64,11 +72,13 @@ public class DirectorySeeder : ISeeder
             _logger.LogInformation("Generating departments...");
             var departments = new List<Department>();
 
+            var usedIdentifiers = new HashSet<string>(StringComparer.Ordinal);
+
             // Создаем корневые департаменты
             int rootDepartmentCount = Math.Max(1, SeedingConstants.DEPARTMENT_COUNT / 3);
             for (int i = 0; i < rootDepartmentCount; i++)
             {
-                departments.Add(DataGenerator.GenerateRandomDepartment(locations));
+                departments.Add(DataGenerator.GenerateRandomDepartment(locations, usedIdentifiers));
             }
 
             // Создаем дочерние департаменты
@@ -76,7 +86,7 @@ public class DirectorySeeder : ISeeder
             for (int i = 0; i < remainingDepartments; i++)
             {
                 var parent = departments[Random.Shared.Next(departments.Count)];
-                departments.Add(DataGenerator.GenerateRandomDepartment(locations, parent));
+                departments.Add(DataGenerator.GenerateRandomDepartment(locations, usedIdentifiers, parent));
             }
 
             _dbContext.Departments.AddRange(departments);
@@ -87,7 +97,7 @@ public class DirectorySeeder : ISeeder
             var positions = new List<Position>();
             for (int i = 0; i < SeedingConstants.POSITION_COUNT; i++)
             {
-                positions.Add(DataGenerator.GenerateRandomPosition(departments));
+                positions.Add(DataGenerator.GenerateRandomPosition(departments, i + 1));
             }
 
             _dbContext.Positions.AddRange(positions);
@@ -95,7 +105,9 @@ public class DirectorySeeder : ISeeder
             _logger.LogInformation("Created {PositionsCount} positions", positions.Count);
 
             _logger.LogInformation("Committing transaction...");
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
+
+            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
 
             _logger.LogInformation("Seeding completed: {LocationsCount} locations, {DepartmentsCount} departments, {PositionsCount} positions", locations.Count, departments.Count, positions.Count);
         }

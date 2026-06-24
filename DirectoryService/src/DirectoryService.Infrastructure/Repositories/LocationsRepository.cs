@@ -31,7 +31,7 @@ public class LocationsRepository : ILocationsRepository
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Locations.AnyAsync(
-            l => l.Name == locationName && l.IsActive, cancellationToken);
+            l => l.Name.Value == locationName.Value && l.IsActive, cancellationToken);
     }
 
     public async Task<bool> IsActiveAddressExistAsync(Address address, CancellationToken cancellationToken = default)
@@ -50,7 +50,7 @@ public class LocationsRepository : ILocationsRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка сохранения изменений в базе данных");
-            return GeneralErrors.Failure(ex.Message).ToErrors();
+            return GeneralErrors.Failure().ToErrors();
         }
     }
 }

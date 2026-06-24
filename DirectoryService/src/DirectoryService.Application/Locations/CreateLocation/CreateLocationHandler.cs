@@ -36,7 +36,7 @@ public class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand
         LocationName locationName = LocationName.Create(command.Request.Name).Value;
         if (await _locationsRepository.IsActiveLocationNameExistAsync(locationName, cancellationToken))
         {
-            return Error.Validation("record.already.exist", "Локация с таким именем уже существует")
+            return Error.Conflict("record.already.exist", "Локация с таким именем уже существует")
                 .ToErrors();
         }
 
@@ -49,7 +49,7 @@ public class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand
             command.Request.Address.Apartment).Value;
         if (await _locationsRepository.IsActiveAddressExistAsync(address, cancellationToken))
         {
-            return Error.Validation("record.already.exist", "Локация с таким адресом уже существует")
+            return Error.Conflict("record.already.exist", "Локация с таким адресом уже существует")
                 .ToErrors();
         }
 
@@ -58,7 +58,7 @@ public class CreateLocationHandler : ICommandHandler<Guid, CreateLocationCommand
             address,
             TimeZone.Create(command.Request.Timezone).Value,
             true,
-            DateTime.Now);
+            DateTime.UtcNow);
 
         await _locationsRepository.AddAsync(location.Value, cancellationToken);
 

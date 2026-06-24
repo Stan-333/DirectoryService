@@ -8,7 +8,7 @@ public record Envelope
 
     public Errors? ErrorList { get; }
 
-    public bool IsError => ErrorList is not null || (ErrorList is not null && ErrorList.Any());
+    public bool IsError => ErrorList is not null && ErrorList.Any();
 
     public DateTime TimeGenerated { get; }
 
@@ -17,7 +17,7 @@ public record Envelope
     {
         Result = result;
         ErrorList = errorList;
-        TimeGenerated = DateTime.Now;
+        TimeGenerated = DateTime.UtcNow;
     }
 
     public static Envelope Ok(object? result) =>
@@ -33,7 +33,7 @@ public record Envelope<T>
 
     public Errors? ErrorList { get; }
 
-    public bool IsError => ErrorList is not null || (ErrorList is not null && ErrorList.Any());
+    public bool IsError => ErrorList is not null && ErrorList.Any();
 
     public DateTime TimeGenerated { get; }
 
@@ -42,7 +42,7 @@ public record Envelope<T>
     {
         Result = result;
         ErrorList = errorList;
-        TimeGenerated = DateTime.Now;
+        TimeGenerated = DateTime.UtcNow;
     }
 
     public static Envelope<T> Ok(T? result) =>

@@ -3,7 +3,7 @@ using DirectoryService.Contracts.Departments.Requests;
 
 namespace DirectoryService.Application.Departments;
 
-internal static class DepartmentsCache
+public static class DepartmentsCache
 {
     public const string Tag = "departments";
 

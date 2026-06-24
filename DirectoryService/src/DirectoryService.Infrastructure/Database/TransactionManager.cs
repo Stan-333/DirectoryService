@@ -40,7 +40,7 @@ public class TransactionManager : ITransactionManager
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка начала транзакции");
-            return GeneralErrors.Failure(ex.Message);
+            return GeneralErrors.Failure();
         }
     }
 
@@ -54,7 +54,7 @@ public class TransactionManager : ITransactionManager
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка сохранения изменений");
-            return GeneralErrors.Failure($"Ошибка сохранения изменений: {ex.Message}");
+            return GeneralErrors.Failure("Ошибка сохранения изменений");
         }
     }
 }
