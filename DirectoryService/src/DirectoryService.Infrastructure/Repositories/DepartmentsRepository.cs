@@ -1,9 +1,10 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Departments;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
+using DirectoryService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
@@ -34,6 +35,25 @@ public class DepartmentsRepository : IDepartmentRepository
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
             return UnitResult.Success<Errors>();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (DbUpdateException ex)
+        {
+            Error? error = PostgresErrorMapper.MapUniqueViolation(ex, out string? constraintName);
+            if (error is not null)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Конфликт уникальности при сохранении подразделения. Ограничение: {ConstraintName}",
+                    constraintName);
+                return error.ToErrors();
+            }
+
+            _logger.LogError(ex, "Ошибка сохранения изменений в базе данных");
+            return GeneralErrors.Failure().ToErrors();
         }
         catch (Exception ex)
         {

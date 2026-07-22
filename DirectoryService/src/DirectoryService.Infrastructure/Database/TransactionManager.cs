@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +50,25 @@ public class TransactionManager : ITransactionManager
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
             return UnitResult.Success<Error>();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (DbUpdateException ex)
+        {
+            Error? error = PostgresErrorMapper.MapUniqueViolation(ex, out string? constraintName);
+            if (error is not null)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Конфликт уникальности при сохранении транзакции. Ограничение: {ConstraintName}",
+                    constraintName);
+                return error;
+            }
+
+            _logger.LogError(ex, "Ошибка сохранения изменений");
+            return GeneralErrors.Failure("Ошибка сохранения изменений");
         }
         catch (Exception ex)
         {
