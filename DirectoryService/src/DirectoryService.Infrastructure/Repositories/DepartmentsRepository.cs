@@ -80,6 +80,17 @@ public class DepartmentsRepository : IDepartmentRepository
         DepartmentId id,
         CancellationToken cancellationToken)
     {
+        IDbContextTransaction? currentTransaction = _dbContext.Database.CurrentTransaction;
+        if (currentTransaction is null)
+        {
+            _logger.LogError(
+                "Попытка получить подразделение {DepartmentId} с блокировкой вне транзакции",
+                id.Value);
+            return Error.Failure(
+                "transaction.required",
+                "Для получения подразделения с блокировкой необходима активная транзакция");
+        }
+
         const string sqlCommand = """
                                   SELECT 1
                                   FROM departments
@@ -90,7 +101,7 @@ public class DepartmentsRepository : IDepartmentRepository
         var command = new CommandDefinition(
             sqlCommand,
             new { departmentId = id.Value },
-            transaction: _dbContext.Database.CurrentTransaction?.GetDbTransaction(),
+            transaction: currentTransaction.GetDbTransaction(),
             cancellationToken: cancellationToken);
         try
         {
@@ -102,6 +113,10 @@ public class DepartmentsRepository : IDepartmentRepository
             return department == null
                 ? GeneralErrors.NotFound(id.Value, nameof(Department))
                 : department!;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {

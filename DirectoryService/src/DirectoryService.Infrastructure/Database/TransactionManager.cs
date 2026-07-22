@@ -30,12 +30,16 @@ public class TransactionManager : ITransactionManager
     {
         try
         {
-            var transaction = await _dbContext.Database.
+            IDbContextTransaction transaction = await _dbContext.Database.
                 BeginTransactionAsync(isolationLevel ?? IsolationLevel.ReadCommitted, cancellationToken);
-            var transactionScopeLogger = _loggerFactory.CreateLogger<TransactionScope>();
-            var transactionScope = new TransactionScope(transaction.GetDbTransaction(), transactionScopeLogger);
+            ILogger<TransactionScope> transactionScopeLogger = _loggerFactory.CreateLogger<TransactionScope>();
+            var transactionScope = new TransactionScope(transaction, transactionScopeLogger);
 
             return transactionScope;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {

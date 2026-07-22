@@ -1,28 +1,32 @@
-using System.Data;
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Shared;
 
 namespace DirectoryService.Infrastructure.Database;
 
-public class TransactionScope : ITransactionScope
+public sealed class TransactionScope : ITransactionScope
 {
-    private readonly IDbTransaction _transaction;
+    private readonly IDbContextTransaction _transaction;
     private readonly ILogger<TransactionScope> _logger;
 
-    public TransactionScope(IDbTransaction transaction, ILogger<TransactionScope> logger)
+    public TransactionScope(IDbContextTransaction transaction, ILogger<TransactionScope> logger)
     {
         _transaction = transaction;
         _logger = logger;
     }
 
-    public UnitResult<Error> Commit()
+    public async Task<UnitResult<Error>> CommitAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            _transaction.Commit();
+            await _transaction.CommitAsync(cancellationToken);
             return UnitResult.Success<Error>();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -31,12 +35,16 @@ public class TransactionScope : ITransactionScope
         }
     }
 
-    public UnitResult<Error> Rollback()
+    public async Task<UnitResult<Error>> RollbackAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            _transaction.Rollback();
+            await _transaction.RollbackAsync(cancellationToken);
             return UnitResult.Success<Error>();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -45,8 +53,8 @@ public class TransactionScope : ITransactionScope
         }
     }
 
-    public void Dispose()
+    public ValueTask DisposeAsync()
     {
-        _transaction.Dispose();
+        return _transaction.DisposeAsync();
     }
 }

@@ -1,11 +1,11 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Shared;
 
 namespace DirectoryService.Application.Abstractions;
 
-public interface ITransactionScope : IDisposable
+public interface ITransactionScope : IAsyncDisposable
 {
-    public UnitResult<Error> Commit();
+    Task<UnitResult<Error>> CommitAsync(CancellationToken cancellationToken = default);
 
-    public UnitResult<Error> Rollback();
+    Task<UnitResult<Error>> RollbackAsync(CancellationToken cancellationToken = default);
 }

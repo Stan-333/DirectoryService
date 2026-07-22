@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using Microsoft.EntityFrameworkCore;
@@ -30,8 +30,6 @@ public sealed class DepartmentCleanupService : IDepartmentCleanupService
     public async Task<int> CleanupExpiredDepartmentsAsync(CancellationToken cancellationToken = default)
     {
         DateTime threshold = DateTime.UtcNow.AddMonths(-_options.RetentionMonths);
-
-        await using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         const string sql = """
                            WITH 
@@ -107,38 +105,45 @@ public sealed class DepartmentCleanupService : IDepartmentCleanupService
                                (SELECT COUNT(*) FROM deleted_departments) AS deleted_count;
                            """;
 
-        try
+        CleanupResult result;
+        await using (IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken))
         {
-            CleanupResult result = await _dbContext.Database.GetDbConnection().QuerySingleAsync<CleanupResult>(
-                new CommandDefinition(
-                    sql,
-                    new { threshold },
-                    transaction: transaction.GetDbTransaction(),
-                    cancellationToken: cancellationToken));
-
-            await transaction.CommitAsync(cancellationToken);
-
-            // Физически изменены/удалены подразделения — кэши departments (roots, children,
-            // top-by-position) ссылаются на устаревшие данные. Инвалидируем тег, только если
-            // что-то реально поменялось, чтобы не дёргать Redis вхолостую.
-            if (result.UpdatedCount + result.DeletedCount > 0)
+            try
             {
-                await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
+                result = await _dbContext.Database.GetDbConnection().QuerySingleAsync<CleanupResult>(
+                    new CommandDefinition(
+                        sql,
+                        new { threshold },
+                        transaction: transaction.GetDbTransaction(),
+                        cancellationToken: cancellationToken));
+
+                await transaction.CommitAsync(cancellationToken);
             }
-
-            _logger.LogInformation(
-                "Фоновая очистка подразделений завершена. Обновлено записей: {UpdatedCount}. Удалено записей: {DeletedCount}",
-                result.UpdatedCount,
-                result.DeletedCount);
-
-            return Convert.ToInt32(result.DeletedCount);
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Ошибка пакетной очистки подразделений");
+                throw;
+            }
         }
-        catch (Exception exception)
+
+        // Физически изменены/удалены подразделения — кэши departments (roots, children,
+        // top-by-position) ссылаются на устаревшие данные. Инвалидируем тег, только если
+        // что-то реально поменялось, чтобы не дёргать Redis вхолостую.
+        if (result.UpdatedCount + result.DeletedCount > 0)
         {
-            await transaction.RollbackAsync(cancellationToken);
-            _logger.LogError(exception, "Ошибка пакетной очистки подразделений");
-            throw;
+            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, CancellationToken.None);
         }
+
+        _logger.LogInformation(
+            "Фоновая очистка подразделений завершена. Обновлено записей: {UpdatedCount}. Удалено записей: {DeletedCount}",
+            result.UpdatedCount,
+            result.DeletedCount);
+
+        return Convert.ToInt32(result.DeletedCount);
     }
 
     private sealed class CleanupResult
