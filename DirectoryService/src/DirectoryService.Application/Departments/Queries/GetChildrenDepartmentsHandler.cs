@@ -1,6 +1,7 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Contracts;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Contracts.Departments.Responses;
 
@@ -39,7 +40,10 @@ public class GetChildrenDepartmentsHandler : IQueryHandler<GetChildrenDepartment
         var connection = await _dbConnectionFactory.CreateOpenConnectionAsync(cancellationToken);
         var parameters = new DynamicParameters();
         parameters.Add("parentId", query.ParentId, DbType.Guid);
-        parameters.Add("offset", (query.Request.Page - 1) * query.Request.PageSize, DbType.Int32);
+        parameters.Add(
+            "offset",
+            PaginationConstraints.CalculateOffset(query.Request.Page, query.Request.PageSize),
+            DbType.Int32);
         parameters.Add("child_limit", query.Request.PageSize, DbType.Int32);
 
         var departmentsDto = await connection.QueryAsync<DepartmentWithChildrenInfoDto>(
