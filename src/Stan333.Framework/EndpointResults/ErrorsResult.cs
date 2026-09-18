@@ -35,12 +35,12 @@ public sealed class ErrorsResult : IResult {
     private static int GetStatusCodeFromErrorType(ErrorType errorType) =>
         errorType switch
         {
-            ErrorType.VALIDATION => StatusCodes.Status400BadRequest,
-            ErrorType.NOT_FOUND => StatusCodes.Status404NotFound,
-            ErrorType.FAILURE => StatusCodes.Status500InternalServerError,
-            ErrorType.CONFLICT => StatusCodes.Status409Conflict,
-            ErrorType.AUTHENTICATION => StatusCodes.Status401Unauthorized,
-            ErrorType.AUTHORIZATION => StatusCodes.Status403Forbidden,
+            ErrorType.Validation => StatusCodes.Status400BadRequest,
+            ErrorType.NotFound => StatusCodes.Status404NotFound,
+            ErrorType.Failure => StatusCodes.Status500InternalServerError,
+            ErrorType.Conflict => StatusCodes.Status409Conflict,
+            ErrorType.Authentication => StatusCodes.Status401Unauthorized,
+            ErrorType.Authorization => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status500InternalServerError,
         };
 }

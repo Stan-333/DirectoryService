@@ -22,22 +22,22 @@ public record Error
     }
 
     public static Error NotFound(string? code, string message, Guid? id = null)
-        => new(code ?? "record.not.found", message, ErrorType.NOT_FOUND);
+        => new(code ?? "record.not.found", message, ErrorType.NotFound);
 
     public static Error Validation(string? code, string message, string? invalidField = null)
-        => new(code ?? "value.is.invalid", message, ErrorType.VALIDATION, invalidField);
+        => new(code ?? "value.is.invalid", message, ErrorType.Validation, invalidField);
 
     public static Error Conflict(string? code, string message)
-        => new(code ?? "value.is.conflict", message, ErrorType.CONFLICT);
+        => new(code ?? "value.is.conflict", message, ErrorType.Conflict);
 
     public static Error Failure(string? code, string message)
-        => new(code ?? "failure", message, ErrorType.FAILURE);
+        => new(code ?? "failure", message, ErrorType.Failure);
 
     public static Error Authentication(string? code, string message)
-        => new(code ?? "authentication", message, ErrorType.AUTHENTICATION);
+        => new(code ?? "authentication", message, ErrorType.Authentication);
 
     public static Error Authorization(string? code, string message)
-        => new(code ?? "authorization", message, ErrorType.AUTHORIZATION);
+        => new(code ?? "authorization", message, ErrorType.Authorization);
 
     public Errors ToErrors() => new([this]);
 
@@ -54,35 +54,40 @@ public record Error
     // }
 }
 
+/// <summary>
+/// Тип ошибки. В JSON передаётся строкой (<c>"NotFound"</c>), а не числом,
+/// поэтому порядок членов можно менять без поломки контракта.
+/// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter<ErrorType>))]
 public enum ErrorType
 {
     /// <summary>
     /// Ошибка с валидацией.
     /// </summary>
-    VALIDATION,
+    Validation,
 
     /// <summary>
     /// Ошибка ничего не найдено.
     /// </summary>
-    NOT_FOUND,
+    NotFound,
 
     /// <summary>
     /// Ошибка сервера.
     /// </summary>
-    FAILURE,
+    Failure,
 
     /// <summary>
     /// Ошибка конфликт.
     /// </summary>
-    CONFLICT,
+    Conflict,
 
     /// <summary>
     /// Ошибка аутентификации.
     /// </summary>
-    AUTHENTICATION,
+    Authentication,
 
     /// <summary>
     /// Ошибка авторизации.
     /// </summary>
-    AUTHORIZATION,
+    Authorization,
 }
