@@ -27,6 +27,7 @@
     <PackageVersion Include="Serilog.Sinks.Trace" Version="4.0.0" />
     <!-- Swagger -->
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.6" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.6" />
     <!-- Validation / DI -->
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
     <PackageVersion Include="Scrutor" Version="6.1.0" />
