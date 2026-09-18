@@ -5,6 +5,9 @@ namespace Stan333.Framework.EndpointResults;
 
 public record Envelope
 {
+    // Ответы с ошибкой не содержат "result": null, иначе клиент не сможет прочитать их
+    // как Envelope<T> с T-значимым типом (например, Envelope<Guid>).
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public object? Result { get; }
 
     public Errors? ErrorList { get; }
