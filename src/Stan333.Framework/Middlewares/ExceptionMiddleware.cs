@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Stan333.Framework.EndpointResults;
@@ -7,6 +6,11 @@ using Stan333.SharedKernel.Exceptions;
 
 namespace Stan333.Framework.Middlewares;
 
+/// <summary>
+/// Перехватывает необработанные исключения и отвечает в формате <see cref="Envelope"/>.
+/// Для <see cref="AppException"/> статус берётся из типов её ошибок. Любое другое исключение
+/// превращается в 500 без подробностей для клиента, а подробности уходят в лог.
+/// </summary>
 public class ExceptionMiddleware
 {
     private readonly RequestDelegate _next;
@@ -22,52 +26,62 @@ public class ExceptionMiddleware
     {
         try
         {
-            // Вызов следующего middleware
-            // Если в следующем коде выбросится исключение, то оно будет перехвачено catch
             await _next(context);
         }
-        catch (Exception ex)
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
-            await HandleExceptionAsync(context, ex);
+            // Клиент разорвал соединение: отвечать некому, и это не ошибка сервера.
+            _logger.LogInformation(
+                "Запрос {Method} {Path} отменён клиентом",
+                context.Request.Method,
+                context.Request.Path);
+        }
+        catch (Exception exception)
+        {
+            if (context.Response.HasStarted)
+            {
+                // Заголовки уже отправлены, заменить ответ ошибкой нельзя.
+                // Пробрасываем исключение, чтобы сервер оборвал соединение и записал его в лог.
+                _logger.LogWarning(
+                    "Ответ на запрос {Method} {Path} уже начат, ошибку в формате Envelope записать нельзя",
+                    context.Request.Method,
+                    context.Request.Path);
+                throw;
+            }
+
+            await WriteErrorResponseAsync(context, exception);
         }
     }
 
-    private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private async Task WriteErrorResponseAsync(HttpContext context, Exception exception)
     {
-        _logger.LogError(exception, exception.Message);
-
-        (int code, Error[]? errors) = exception switch
+        (int statusCode, Errors errors) = exception switch
         {
-            BadRequestException ex => (
-                StatusCodes.Status400BadRequest, JsonSerializer.Deserialize<Error[]>(exception.Message)),
-
-            ValidationException ex => (
-                StatusCodes.Status400BadRequest, JsonSerializer.Deserialize<Error[]>(exception.Message)),
-
-            NotFoundException ex => (
-                StatusCodes.Status404NotFound, JsonSerializer.Deserialize<Error[]>(exception.Message)),
-
-            ConflictException ex => (
-                StatusCodes.Status409Conflict, JsonSerializer.Deserialize<Error[]>(exception.Message)),
-
-            FailureException ex => (
-                StatusCodes.Status500InternalServerError, JsonSerializer.Deserialize<Error[]>(exception.Message)),
-
-            AuthenticationException ex => (
-                StatusCodes.Status401Unauthorized, JsonSerializer.Deserialize<Error[]>(exception.Message)),
-
-            _ => (StatusCodes.Status500InternalServerError, [Error.Failure(null, "Something went wrong")]),
+            AppException appException => (ErrorStatusCodes.FromErrors(appException.Errors), appException.Errors),
+            _ => (StatusCodes.Status500InternalServerError, GeneralErrors.Failure().ToErrors()),
         };
 
-        var envelope = Envelope.Error(new Errors(errors ?? []));
+        if (statusCode >= StatusCodes.Status500InternalServerError)
+        {
+            _logger.LogError(
+                exception,
+                "Необработанное исключение при обработке запроса {Method} {Path}",
+                context.Request.Method,
+                context.Request.Path);
+        }
+        else
+        {
+            _logger.LogWarning(
+                exception,
+                "Запрос {Method} {Path} завершился ошибкой {StatusCode}",
+                context.Request.Method,
+                context.Request.Path,
+                statusCode);
+        }
 
-        // ответ будет в json формате
-        context.Response.ContentType = "application/json";
+        context.Response.Clear();
+        context.Response.StatusCode = statusCode;
 
-        // код ответа
-        context.Response.StatusCode = code;
-
-        // запись ошибок в ответ
-        await context.Response.WriteAsJsonAsync(envelope);
+        await context.Response.WriteAsJsonAsync(Envelope.Error(errors));
     }
 }

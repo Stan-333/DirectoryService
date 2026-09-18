@@ -16,31 +16,10 @@ public sealed class ErrorsResult : IResult {
     {
         ArgumentNullException.ThrowIfNull(httpContext);
 
-        var distinctErrorTypes = _errors
-            .Select(e => e.Type)
-            .Distinct()
-            .ToList();
-
-        int statusCode = distinctErrorTypes.Count == 1
-            ? GetStatusCodeFromErrorType(distinctErrorTypes[0])
-            : StatusCodes.Status500InternalServerError;
-
         var envelope = Envelope.Error(_errors);
 
-        httpContext.Response.StatusCode = statusCode;
+        httpContext.Response.StatusCode = ErrorStatusCodes.FromErrors(_errors);
 
         return httpContext.Response.WriteAsJsonAsync(envelope);
     }
-
-    private static int GetStatusCodeFromErrorType(ErrorType errorType) =>
-        errorType switch
-        {
-            ErrorType.Validation => StatusCodes.Status400BadRequest,
-            ErrorType.NotFound => StatusCodes.Status404NotFound,
-            ErrorType.Failure => StatusCodes.Status500InternalServerError,
-            ErrorType.Conflict => StatusCodes.Status409Conflict,
-            ErrorType.Authentication => StatusCodes.Status401Unauthorized,
-            ErrorType.Authorization => StatusCodes.Status403Forbidden,
-            _ => StatusCodes.Status500InternalServerError,
-        };
 }

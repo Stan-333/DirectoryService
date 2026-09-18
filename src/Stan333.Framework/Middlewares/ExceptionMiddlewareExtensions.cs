@@ -7,7 +7,7 @@ namespace Stan333.Framework.Middlewares;
 /// </summary>
 public static class ExceptionMiddlewareExtensions
 {
-    // этот интерфейс реализует WebApplication, здесь мы его расширяем
-    public static IApplicationBuilder UseExceptionMiddleware(this WebApplication app) =>
+    // Подключать первым в конвейере, чтобы перехватывать исключения всех следующих middleware.
+    public static IApplicationBuilder UseExceptionMiddleware(this IApplicationBuilder app) =>
         app.UseMiddleware<ExceptionMiddleware>();
 }
