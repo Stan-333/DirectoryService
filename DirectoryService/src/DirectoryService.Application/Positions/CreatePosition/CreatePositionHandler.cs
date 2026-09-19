@@ -75,7 +75,7 @@ public class CreatePositionHandler : ICommandHandler<Guid, CreatePositionCommand
 
         // Кэш departments хранит и top-by-position, который считает позиции по department_positions.
         // Создание новой позиции с привязками меняет статистику — инвалидируем тег.
-        await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
+        await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, CancellationToken.None);
 
         _logger.LogInformation(
             "Position {PositionName} created with id {PositionId}",

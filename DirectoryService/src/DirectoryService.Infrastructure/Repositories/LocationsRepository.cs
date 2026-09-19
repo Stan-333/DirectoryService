@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Locations;
 using DirectoryService.Domain.Locations;
+using DirectoryService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared;
@@ -46,6 +47,25 @@ public class LocationsRepository : ILocationsRepository
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
             return UnitResult.Success<Errors>();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (DbUpdateException ex)
+        {
+            Error? error = PostgresErrorMapper.MapUniqueViolation(ex, out string? constraintName);
+            if (error is not null)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Конфликт уникальности при сохранении локации. Ограничение: {ConstraintName}",
+                    constraintName);
+                return error.ToErrors();
+            }
+
+            _logger.LogError(ex, "Ошибка сохранения изменений в базе данных");
+            return GeneralErrors.Failure().ToErrors();
         }
         catch (Exception ex)
         {

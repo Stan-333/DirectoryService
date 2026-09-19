@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Contracts;
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Contracts.Locations.Responses;
 using DirectoryService.Domain.Departments;
@@ -55,9 +56,12 @@ public class GetLocationsWithFiltersHandler : IQueryHandler<GetLocationsWithFilt
             : locationsQuery.OrderByDescending(keySelector);
 
         int totalCount = await locationsQuery.CountAsync(cancellationToken);
+        int offset = PaginationConstraints.CalculateOffset(
+            query.Request.Pagination.Page,
+            query.Request.Pagination.PageSize);
 
         locationsQuery = locationsQuery
-            .Skip((query.Request.Pagination.Page - 1) * query.Request.Pagination.PageSize)
+            .Skip(offset)
             .Take(query.Request.Pagination.PageSize);
 
         var locations = await locationsQuery

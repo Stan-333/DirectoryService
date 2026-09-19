@@ -59,98 +59,95 @@ public class UpdateDepartmentParentHandler : ICommandHandler<Guid, UpdateDepartm
             return transactionScopeResult.Error.ToErrors();
         }
 
-        // Использование using ОБЯЗАТЕЛЬНО, так как это гарантирует, что Dispose будет вызван всегда, даже при исключении
-        using var transactionScope = transactionScopeResult.Value;
-
-        // Проверить, что существует подразделение с таким departmentId и оно активно
-        var department = await _departmentRepository
-            .GetByIdWithLockAsync(new DepartmentId(command.DepartmentId), cancellationToken);
-
-        if (department.IsFailure)
+        Department department;
+        await using (ITransactionScope transactionScope = transactionScopeResult.Value)
         {
-            transactionScope.Rollback();
-            return department.Error.ToErrors();
-        }
+            // Проверить, что существует подразделение с таким departmentId и оно активно
+            var departmentResult = await _departmentRepository
+                .GetByIdWithLockAsync(new DepartmentId(command.DepartmentId), cancellationToken);
 
-        // Проверить, что новый parentId (если не null) существует, активен и не совпадает с departmentId
-        Department? parent;
-        if (command.Request.ParentId == null)
-        {
-            parent = null;
-        }
-        else
-        {
-            var newParent = await _departmentRepository
-                .GetByIdWithLockAsync(new DepartmentId(command.Request.ParentId.Value), cancellationToken);
-
-            if (newParent.IsFailure)
+            if (departmentResult.IsFailure)
             {
-                transactionScope.Rollback();
-                return newParent.Error.ToErrors();
+                return departmentResult.Error.ToErrors();
             }
 
-            parent = newParent.Value;
+            department = departmentResult.Value;
 
-            // Нельзя выбрать родителем своё "дочернее" подразделение (чтобы не было зацикливания структуры)
-            var isParent = await _departmentRepository.IsParent(
-                department.Value.Path,
-                parent.Id,
-                cancellationToken);
-            if (isParent.IsFailure)
+            // Проверить, что новый parentId (если не null) существует, активен и не совпадает с departmentId
+            Department? parent;
+            if (command.Request.ParentId == null)
             {
-                transactionScope.Rollback();
-                return isParent.Error.ToErrors();
+                parent = null;
+            }
+            else
+            {
+                var newParent = await _departmentRepository
+                    .GetByIdWithLockAsync(new DepartmentId(command.Request.ParentId.Value), cancellationToken);
+
+                if (newParent.IsFailure)
+                {
+                    return newParent.Error.ToErrors();
+                }
+
+                parent = newParent.Value;
+
+                // Нельзя выбрать родителем своё "дочернее" подразделение (чтобы не было зацикливания структуры)
+                var isParent = await _departmentRepository.IsParent(
+                    department.Path,
+                    parent.Id,
+                    cancellationToken);
+                if (isParent.IsFailure)
+                {
+                    return isParent.Error.ToErrors();
+                }
+
+                if (isParent.Value)
+                {
+                    return Error.Conflict(
+                            "parent.is.conflict",
+                            "В качестве родителя выбрано своё \"дочернее\" подразделение")
+                        .ToErrors();
+                }
             }
 
-            if (isParent.Value)
+            // Блокировка подчинённых подразделений для дальнейшего массового обновления
+            string oldPath = department.Path;
+            var lockDescendantsResult = await _departmentRepository.LockDescendantsAsync(oldPath, cancellationToken);
+            if (lockDescendantsResult.IsFailure)
             {
-                transactionScope.Rollback();
-                return Error.Conflict(
-                        "parent.is.conflict",
-                        "В качестве родителя выбрано своё \"дочернее\" подразделение")
-                    .ToErrors();
+                return lockDescendantsResult.Error.ToErrors();
+            }
+
+            // Изменить parentId у подразделения, пересчитать и обновить Path, Depth
+            department.UpdateParent(parent);
+            var saveChangeResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+            if (saveChangeResult.IsFailure)
+            {
+                return saveChangeResult.Error.ToErrors();
+            }
+
+            // Для всех дочерних подразделений и их потомков обновить Path и Depth, использовать Ltree
+            var updateResult = await _departmentRepository.UpdateDescendantProperties(
+                oldPath, department.Path, cancellationToken);
+            if (updateResult.IsFailure)
+            {
+                return updateResult.Error.ToErrors();
+            }
+
+            var commitResult = await transactionScope.CommitAsync(cancellationToken);
+            if (commitResult.IsFailure)
+            {
+                return commitResult.Error.ToErrors();
             }
         }
 
-        // Блокировка подчинённых подразделений для дальнейшего массового обновления
-        string oldPath = department.Value.Path;
-        var lockDescendantsResult = await _departmentRepository.LockDescendantsAsync(oldPath, cancellationToken);
-        if (lockDescendantsResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return lockDescendantsResult.Error.ToErrors();
-        }
+        await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, CancellationToken.None);
 
-        // Изменить parentId у подразделения, пересчитать и обновить Path, Depth
-        department.Value.UpdateParent(parent);
-        var saveChangeResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveChangeResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveChangeResult.Error.ToErrors();
-        }
+        _logger.LogInformation(
+            "У подразделения {DepartmentName} (id {DepartmentId}) изменено родительское подразделение. Данные успешно обновлены.",
+            department.Name.Value,
+            department.Id.Value);
 
-        // Для всех дочерних подразделений и их потомков обновить Path и Depth, использовать Ltree
-        var updateResult = await _departmentRepository.UpdateDescendantProperties(
-            oldPath, department.Value.Path, cancellationToken);
-        if (updateResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return updateResult.Error.ToErrors();
-        }
-
-        var commitResult = transactionScope.Commit();
-        if (commitResult.IsSuccess)
-        {
-            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
-
-            _logger.LogInformation(
-                "У подразделения {DepartmentName} (id {DepartmentId}) изменено родительское подразделение. Данные успешно обновлены.",
-                department.Value.Name.Value,
-                department.Value.Id.Value);
-            return department.Value.Id.Value;
-        }
-
-        return commitResult.Error.ToErrors();
+        return department.Id.Value;
     }
 }

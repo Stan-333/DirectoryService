@@ -46,76 +46,73 @@ public class SoftDeleteDepartmentHandler : ICommandHandler<Guid, SoftDeleteDepar
             return transactionScopeResult.Error.ToErrors();
         }
 
-        // Использование using ОБЯЗАТЕЛЬНО, так как это гарантирует, что Dispose будет вызван всегда, даже при исключении
-        using var transactionScope = transactionScopeResult.Value;
-
-        var department = await _departmentRepository
-            .GetByIdWithLockAsync(new DepartmentId(command.DepartmentId), cancellationToken);
-
-        if (department.IsFailure)
+        Department department;
+        await using (ITransactionScope transactionScope = transactionScopeResult.Value)
         {
-            transactionScope.Rollback();
-            return department.Error.ToErrors();
+            var departmentResult = await _departmentRepository
+                .GetByIdWithLockAsync(new DepartmentId(command.DepartmentId), cancellationToken);
+
+            if (departmentResult.IsFailure)
+            {
+                return departmentResult.Error.ToErrors();
+            }
+
+            department = departmentResult.Value;
+            string oldPath = department.Path;
+
+            // Блокировка подчинённых подразделений для дальнейшего массового обновления
+            var lockDescendantsResult = await _departmentRepository.LockDescendantsAsync(oldPath, cancellationToken);
+            if (lockDescendantsResult.IsFailure)
+            {
+                return lockDescendantsResult.Error.ToErrors();
+            }
+
+            department.SoftDelete();
+            var saveChangeResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+            if (saveChangeResult.IsFailure)
+            {
+                return saveChangeResult.Error.ToErrors();
+            }
+
+            // деактивация связанных локаций
+            var softDeleteDepartmentLocationsResult = await _departmentRepository
+                .SoftDeleteDepartmentLocations(command.DepartmentId, cancellationToken);
+            if (softDeleteDepartmentLocationsResult.IsFailure)
+            {
+                return softDeleteDepartmentLocationsResult.Error.ToErrors();
+            }
+
+            // деактивация связанных должностей
+            var softDeleteDepartmentPositionsResult = await _departmentRepository
+                .SoftDeleteDepartmentPositions(command.DepartmentId, cancellationToken);
+            if (softDeleteDepartmentPositionsResult.IsFailure)
+            {
+                return softDeleteDepartmentPositionsResult.Error.ToErrors();
+            }
+
+            // обновление путей у дочерних подразделений
+            string newPath = department.Path;
+            var updateSubPathsResult = await _departmentRepository.UpdateSubPaths(
+                oldPath, newPath, cancellationToken);
+            if (updateSubPathsResult.IsFailure)
+            {
+                return updateSubPathsResult.Error.ToErrors();
+            }
+
+            var commitResult = await transactionScope.CommitAsync(cancellationToken);
+            if (commitResult.IsFailure)
+            {
+                return commitResult.Error.ToErrors();
+            }
         }
 
-        string oldPath = department.Value.Path;
+        await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, CancellationToken.None);
 
-        // Блокировка подчинённых подразделений для дальнейшего массового обновления
-        var lockDescendantsResult = await _departmentRepository.LockDescendantsAsync(oldPath, cancellationToken);
-        if (lockDescendantsResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return lockDescendantsResult.Error.ToErrors();
-        }
+        _logger.LogInformation(
+            "Подразделение {DepartmentName} (id {DepartmentId}) деактивировано. Данные успешно обновлены.",
+            department.Name.Value,
+            department.Id.Value);
 
-        department.Value.SoftDelete();
-        var saveChangeResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveChangeResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveChangeResult.Error.ToErrors();
-        }
-
-        // деактивация связанных локаций
-        var softDeleteDepartmentLocationsResult = await _departmentRepository
-            .SoftDeleteDepartmentLocations(command.DepartmentId, cancellationToken);
-        if (softDeleteDepartmentLocationsResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return softDeleteDepartmentLocationsResult.Error.ToErrors();
-        }
-
-        // деактивация связанных должностей
-        var softDeleteDepartmentPositionsResult = await _departmentRepository
-            .SoftDeleteDepartmentPositions(command.DepartmentId, cancellationToken);
-        if (softDeleteDepartmentPositionsResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return softDeleteDepartmentPositionsResult.Error.ToErrors();
-        }
-
-        // обновление путей у дочерних подразделений
-        string newPath = department.Value.Path;
-        var updateSubPathsResult = await _departmentRepository.UpdateSubPaths(
-            oldPath, newPath, cancellationToken);
-        if (updateSubPathsResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return updateSubPathsResult.Error.ToErrors();
-        }
-
-        var commitResult = transactionScope.Commit();
-        if (commitResult.IsSuccess)
-        {
-            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
-
-            _logger.LogInformation(
-                "Подразделение {DepartmentName} (id {DepartmentId}) деактивировано. Данные успешно обновлены.",
-                department.Value.Name.Value,
-                department.Value.Id.Value);
-            return department.Value.Id.Value;
-        }
-
-        return commitResult.Error.ToErrors();
+        return department.Id.Value;
     }
 }

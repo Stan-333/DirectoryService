@@ -59,63 +59,52 @@ public class UpdateDepartmentLocationsHandler : ICommandHandler<Guid, UpdateDepa
             return transactionScopeResult.Error.ToErrors();
         }
 
-        // Использование using ОБЯЗАТЕЛЬНО, так как это гарантирует, что Dispose будет вызван всегда, даже при исключении
-        using var transactionScope = transactionScopeResult.Value;
-
-        var department = await _departmentRepository
-            .GetByIdAsync(new DepartmentId(command.DepartmentId), cancellationToken);
-        if (department.IsFailure)
+        Department department;
+        await using (ITransactionScope transactionScope = transactionScopeResult.Value)
         {
-            transactionScope.Rollback();
-            return department.Error.ToErrors();
+            var departmentResult = await _departmentRepository
+                .GetByIdWithLockAsync(new DepartmentId(command.DepartmentId), cancellationToken);
+            if (departmentResult.IsFailure)
+            {
+                return departmentResult.Error.ToErrors();
+            }
+
+            department = departmentResult.Value;
+
+            var departmentLocations = command.Request.LocationIds
+                .Select(locId => new DepartmentLocation(new DepartmentId(command.DepartmentId), new LocationId(locId)))
+                .ToList();
+
+            department.UpdateLocations(departmentLocations);
+
+            var deleteResult = await _departmentRepository.
+                DeleteDepartmentLocationsByIdAsync(department.Id, cancellationToken);
+
+            if (deleteResult.IsFailure)
+            {
+                return deleteResult.Error.ToErrors();
+            }
+
+            var saveChangeResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+            if (saveChangeResult.IsFailure)
+            {
+                return saveChangeResult.Error.ToErrors();
+            }
+
+            var commitResult = await transactionScope.CommitAsync(cancellationToken);
+            if (commitResult.IsFailure)
+            {
+                return commitResult.Error.ToErrors();
+            }
         }
 
-        if (!department.Value.IsActive)
-        {
-            transactionScope.Rollback();
-            return Error.NotFound(
-                "department.not.active",
-                $"Родительское подразделение с идентификатором {command.DepartmentId} не активно").ToErrors();
-        }
+        await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, CancellationToken.None);
 
-        var departmentLocations = command.Request.LocationIds
-            .Select(locId => new DepartmentLocation(new DepartmentId(command.DepartmentId), new LocationId(locId)))
-            .ToList();
+        _logger.LogInformation(
+            "У подразделения {DepartmentName} (id {DepartmentId}) локации успешно обновлены",
+            department.Name.Value,
+            department.Id.Value);
 
-        department.Value.UpdateLocations(departmentLocations);
-
-        var deleteResult = await _departmentRepository.
-            DeleteDepartmentLocationsByIdAsync(department.Value.Id, cancellationToken);
-
-        if (deleteResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return deleteResult.Error.ToErrors();
-        }
-
-        var saveChangeResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveChangeResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveChangeResult.Error.ToErrors();
-        }
-
-        var commitResult = transactionScope.Commit();
-
-        if (commitResult.IsSuccess)
-        {
-            await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, cancellationToken);
-
-            _logger.LogInformation(
-                "У подразделения {DepartmentName} (id {DepartmentId}) локации успешно обновлены",
-                department.Value.Name.Value,
-                department.Value.Id.Value);
-
-            return department.Value.Id.Value;
-        }
-        else
-        {
-            return commitResult.Error.ToErrors();
-        }
+        return department.Id.Value;
     }
 }

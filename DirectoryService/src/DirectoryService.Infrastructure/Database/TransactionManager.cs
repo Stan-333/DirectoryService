@@ -30,12 +30,16 @@ public class TransactionManager : ITransactionManager
     {
         try
         {
-            var transaction = await _dbContext.Database.
+            IDbContextTransaction transaction = await _dbContext.Database.
                 BeginTransactionAsync(isolationLevel ?? IsolationLevel.ReadCommitted, cancellationToken);
-            var transactionScopeLogger = _loggerFactory.CreateLogger<TransactionScope>();
-            var transactionScope = new TransactionScope(transaction.GetDbTransaction(), transactionScopeLogger);
+            ILogger<TransactionScope> transactionScopeLogger = _loggerFactory.CreateLogger<TransactionScope>();
+            var transactionScope = new TransactionScope(transaction, transactionScopeLogger);
 
             return transactionScope;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -50,6 +54,25 @@ public class TransactionManager : ITransactionManager
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
             return UnitResult.Success<Error>();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (DbUpdateException ex)
+        {
+            Error? error = PostgresErrorMapper.MapUniqueViolation(ex, out string? constraintName);
+            if (error is not null)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Конфликт уникальности при сохранении транзакции. Ограничение: {ConstraintName}",
+                    constraintName);
+                return error;
+            }
+
+            _logger.LogError(ex, "Ошибка сохранения изменений");
+            return GeneralErrors.Failure("Ошибка сохранения изменений");
         }
         catch (Exception ex)
         {
