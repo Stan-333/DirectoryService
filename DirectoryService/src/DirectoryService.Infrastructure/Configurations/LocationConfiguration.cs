@@ -1,5 +1,6 @@
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Shared;
+using DirectoryService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TimeZone = DirectoryService.Domain.Locations.TimeZone;
@@ -26,7 +27,7 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
                 .IsRequired();
 
             nb.HasIndex(n => n.Value)
-                .HasDatabaseName("idx_location_name")
+                .HasDatabaseName(IndexNames.LOCATION_NAME)
                 .HasFilter("is_active = true")
                 .IsUnique();
         });

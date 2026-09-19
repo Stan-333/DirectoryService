@@ -1,4 +1,5 @@
 using DirectoryService.Domain.Departments;
+using DirectoryService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -31,7 +32,7 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
             .HasConversion(i => i.Value, s => Identifier.Create(s).Value);
 
         builder.HasIndex(d => d.Identifier)
-            .HasDatabaseName("idx_department_identifier")
+            .HasDatabaseName(IndexNames.DEPARTMENT_IDENTIFIER)
             .HasFilter("is_active = true")
             .IsUnique();
 
@@ -59,7 +60,7 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
 
         builder.HasIndex(d => d.Path)
             .HasMethod("gist")
-            .HasDatabaseName("idx_department_path");
+            .HasDatabaseName(IndexNames.DEPARTMENT_PATH);
 
         builder.Property(d => d.Depth)
             .HasColumnName("depth");
