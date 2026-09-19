@@ -60,19 +60,27 @@ public class GetRootDepartmentsWithChildrenHandler
                                   d.updated_at
                            FROM departments d
                            WHERE d.parent_id IS NULL
+                             AND d.is_active = true
                            ORDER BY d.created_at
                            OFFSET @offset LIMIT @root_limit
                            )
             -- получаем родительские подразделения
             SELECT *,
-                   (EXISTS(SELECT 1 FROM departments WHERE parent_id = roots.department_id OFFSET @child_limit LIMIT 1)) AS has_more_children
+                   (EXISTS(SELECT 1
+                           FROM departments
+                           WHERE parent_id = roots.department_id
+                             AND is_active = true
+                           OFFSET @child_limit LIMIT 1)) AS has_more_children
             FROM roots
 
             UNION ALL
 
             -- получаем дочерние подразделения
             SELECT c.*,
-                   (EXISTS(SELECT 1 FROM departments WHERE parent_id = c.department_id)) AS has_more_children
+                   (EXISTS(SELECT 1
+                           FROM departments
+                           WHERE parent_id = c.department_id
+                             AND is_active = true)) AS has_more_children
             FROM roots r CROSS JOIN LATERAL (
                 SELECT d.department_id,
                        d.parent_id,
