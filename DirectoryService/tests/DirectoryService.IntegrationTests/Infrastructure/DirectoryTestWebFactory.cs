@@ -20,15 +20,13 @@ namespace DirectoryService.IntegrationTests.Infrastructure;
 // InitializeAsync можно использовать вместо конструктора.
 public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres")
         .WithDatabase("directory_service_db")
         .WithUsername("postgres")
         .WithPassword("postgres")
         .Build();
 
-    private readonly RedisContainer _redisContainer = new RedisBuilder()
-        .WithImage("redis:7-alpine")
+    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:7-alpine")
         .Build();
 
     private Respawner _respawner = null!;
