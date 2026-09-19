@@ -27,9 +27,19 @@ public class ErrorStatusCodesTests
     }
 
     [Fact]
-    public void FromErrors_with_errors_of_different_types_returns_500()
+    public void FromErrors_with_different_client_errors_returns_status_of_first_error()
     {
-        Error[] errors = [Error.Validation(null, "a"), Error.NotFound(null, "b")];
+        Error[] validationFirst = [Error.Validation(null, "a"), Error.NotFound(null, "b")];
+        Error[] notFoundFirst = [Error.NotFound(null, "b"), Error.Validation(null, "a")];
+
+        ErrorStatusCodes.FromErrors(validationFirst).Should().Be(400);
+        ErrorStatusCodes.FromErrors(notFoundFirst).Should().Be(404);
+    }
+
+    [Fact]
+    public void FromErrors_with_failure_among_errors_returns_500()
+    {
+        Error[] errors = [Error.Validation(null, "a"), Error.Failure(null, "b")];
 
         ErrorStatusCodes.FromErrors(errors).Should().Be(500);
     }

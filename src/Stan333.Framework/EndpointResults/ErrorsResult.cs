@@ -3,7 +3,8 @@ using Stan333.SharedKernel;
 
 namespace Stan333.Framework.EndpointResults;
 
-public sealed class ErrorsResult : IResult {
+public sealed class ErrorsResult : IResult
+{
     private readonly Errors _errors;
 
     public ErrorsResult(Error error) =>

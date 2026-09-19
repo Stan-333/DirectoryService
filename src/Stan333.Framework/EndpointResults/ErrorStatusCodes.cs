@@ -10,21 +10,28 @@ namespace Stan333.Framework.EndpointResults;
 public static class ErrorStatusCodes
 {
     /// <summary>
-    /// Если все ошибки одного типа, возвращает статус этого типа.
-    /// Если типов несколько или список пуст, возвращает 500.
+    /// Статус для набора ошибок. Пустой список или хотя бы одна ошибка <see cref="ErrorType.Failure"/> дают 500.
+    /// Иначе берётся статус первой ошибки: смесь ошибок клиента (например, Validation и NotFound)
+    /// остаётся ошибкой клиента, а не превращается в 500.
     /// </summary>
     public static int FromErrors(IEnumerable<Error> errors)
     {
         ArgumentNullException.ThrowIfNull(errors);
 
-        List<ErrorType> distinctErrorTypes = errors
-            .Select(e => e.Type)
-            .Distinct()
-            .ToList();
+        Error? first = null;
+        foreach (Error error in errors)
+        {
+            if (error.Type == ErrorType.Failure)
+            {
+                return StatusCodes.Status500InternalServerError;
+            }
 
-        return distinctErrorTypes.Count == 1
-            ? FromErrorType(distinctErrorTypes[0])
-            : StatusCodes.Status500InternalServerError;
+            first ??= error;
+        }
+
+        return first is null
+            ? StatusCodes.Status500InternalServerError
+            : FromErrorType(first.Type);
     }
 
     public static int FromErrorType(ErrorType errorType) =>
