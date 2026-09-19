@@ -1,6 +1,8 @@
 using FluentAssertions;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Stan333.Core.Abstractions;
+using Stan333.Core.DependencyInjection;
 using Stan333.Shared.UnitTests.Core.Handlers;
 
 namespace Stan333.Shared.UnitTests.Core;
@@ -45,5 +47,19 @@ public class HandlersExtensionsTests
         services.Where(d => d.ServiceType == typeof(PingCommandHandler) || d.ServiceType == typeof(ICommandHandler<string, PingCommand>))
             .Should().NotBeEmpty()
             .And.OnlyContain(d => d.Lifetime == ServiceLifetime.Scoped);
+    }
+
+    [Fact]
+    public void AddHandlersAndValidators_registers_validators_too()
+    {
+        var services = new ServiceCollection();
+        services.AddHandlersAndValidators(typeof(PingCommandHandler).Assembly);
+        using ServiceProvider provider = services.BuildServiceProvider(validateScopes: true);
+        using IServiceScope scope = provider.CreateScope();
+
+        var validator = scope.ServiceProvider.GetRequiredService<IValidator<PingCommand>>();
+
+        validator.Validate(new PingCommand(string.Empty)).IsValid.Should().BeFalse();
+        scope.ServiceProvider.GetRequiredService<ICommandHandler<string, PingCommand>>().Should().NotBeNull();
     }
 }
