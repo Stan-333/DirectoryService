@@ -51,79 +51,68 @@ public class DirectorySeeder : ISeeder
         List<Department> departments = [];
         List<Position> positions = [];
 
+        // При исключении await using откатывает транзакцию, а ошибку один раз логирует SeedAsync.
         await using (var transaction = await _dbContext.Database.BeginTransactionAsync(
                          IsolationLevel.Serializable,
                          cancellationToken: cancellationToken))
         {
-            try
+            _logger.LogInformation("Clearing existing data...");
+
+            // Очистка всех таблиц в правильном порядке (сначала дочерние, потом родительские)
+            await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE department_positions CASCADE", cancellationToken);
+            await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE department_locations CASCADE", cancellationToken);
+            await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE positions CASCADE", cancellationToken);
+            await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE departments CASCADE", cancellationToken);
+            await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE locations CASCADE", cancellationToken);
+
+            _logger.LogInformation("Generating locations...");
+            var usedLocationNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var usedLocationAddresses = new HashSet<string>(StringComparer.Ordinal);
+
+            for (int i = 0; i < SeedingConstants.LOCATION_COUNT; i++)
             {
-                _logger.LogInformation("Clearing existing data...");
-
-                // Очистка всех таблиц в правильном порядке (сначала дочерние, потом родительские)
-                await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE department_positions CASCADE", cancellationToken);
-                await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE department_locations CASCADE", cancellationToken);
-                await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE positions CASCADE", cancellationToken);
-                await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE departments CASCADE", cancellationToken);
-                await _dbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE locations CASCADE", cancellationToken);
-
-                _logger.LogInformation("Generating locations...");
-                var usedLocationNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                var usedLocationAddresses = new HashSet<string>(StringComparer.Ordinal);
-
-                for (int i = 0; i < SeedingConstants.LOCATION_COUNT; i++)
-                {
-                    locations.Add(DataGenerator.GenerateRandomLocation(usedLocationNames, usedLocationAddresses));
-                }
-
-                _dbContext.Locations.AddRange(locations);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("Created {LocationsCount} locations", locations.Count);
-
-                _logger.LogInformation("Generating departments...");
-
-                var usedIdentifiers = new HashSet<string>(StringComparer.Ordinal);
-
-                // Создаем корневые департаменты
-                int rootDepartmentCount = Math.Max(1, SeedingConstants.DEPARTMENT_COUNT / 3);
-                for (int i = 0; i < rootDepartmentCount; i++)
-                {
-                    departments.Add(DataGenerator.GenerateRandomDepartment(locations, usedIdentifiers));
-                }
-
-                // Создаем дочерние департаменты
-                int remainingDepartments = SeedingConstants.DEPARTMENT_COUNT - rootDepartmentCount;
-                for (int i = 0; i < remainingDepartments; i++)
-                {
-                    var parent = departments[Random.Shared.Next(departments.Count)];
-                    departments.Add(DataGenerator.GenerateRandomDepartment(locations, usedIdentifiers, parent));
-                }
-
-                _dbContext.Departments.AddRange(departments);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("Created {DepartmentsCount} departments", departments.Count);
-
-                _logger.LogInformation("Generating positions...");
-                for (int i = 0; i < SeedingConstants.POSITION_COUNT; i++)
-                {
-                    positions.Add(DataGenerator.GenerateRandomPosition(departments, i + 1));
-                }
-
-                _dbContext.Positions.AddRange(positions);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("Created {PositionsCount} positions", positions.Count);
-
-                _logger.LogInformation("Committing transaction...");
-                await transaction.CommitAsync(cancellationToken);
+                locations.Add(DataGenerator.GenerateRandomLocation(usedLocationNames, usedLocationAddresses));
             }
-            catch (OperationCanceledException)
+
+            _dbContext.Locations.AddRange(locations);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Created {LocationsCount} locations", locations.Count);
+
+            _logger.LogInformation("Generating departments...");
+
+            var usedIdentifiers = new HashSet<string>(StringComparer.Ordinal);
+
+            // Создаем корневые департаменты
+            int rootDepartmentCount = Math.Max(1, SeedingConstants.DEPARTMENT_COUNT / 3);
+            for (int i = 0; i < rootDepartmentCount; i++)
             {
-                throw;
+                departments.Add(DataGenerator.GenerateRandomDepartment(locations, usedIdentifiers));
             }
-            catch (Exception ex)
+
+            // Создаем дочерние департаменты
+            int remainingDepartments = SeedingConstants.DEPARTMENT_COUNT - rootDepartmentCount;
+            for (int i = 0; i < remainingDepartments; i++)
             {
-                _logger.LogError(ex, "An error occurred during the seeding transaction.");
-                throw;
+                var parent = departments[Random.Shared.Next(departments.Count)];
+                departments.Add(DataGenerator.GenerateRandomDepartment(locations, usedIdentifiers, parent));
             }
+
+            _dbContext.Departments.AddRange(departments);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Created {DepartmentsCount} departments", departments.Count);
+
+            _logger.LogInformation("Generating positions...");
+            for (int i = 0; i < SeedingConstants.POSITION_COUNT; i++)
+            {
+                positions.Add(DataGenerator.GenerateRandomPosition(departments, i + 1));
+            }
+
+            _dbContext.Positions.AddRange(positions);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Created {PositionsCount} positions", positions.Count);
+
+            _logger.LogInformation("Committing transaction...");
+            await transaction.CommitAsync(cancellationToken);
         }
 
         await _cacheService.RemoveByTagAsync(DepartmentsCache.Tag, CancellationToken.None);
