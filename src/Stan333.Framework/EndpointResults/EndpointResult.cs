@@ -38,9 +38,23 @@ public sealed class EndpointResult<TValue> : IResult, IEndpointMetadataProvider
         ArgumentNullException.ThrowIfNull(method);
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Metadata.Add(new ProducesResponseTypeMetadata(500, typeof(Envelope<Errors>), ["application/json"]));
-        builder.Metadata.Add(new ProducesResponseTypeMetadata(400, typeof(Envelope<Errors>), ["application/json"]));
-        builder.Metadata.Add(new ProducesResponseTypeMetadata(404, typeof(Envelope<Errors>), ["application/json"]));
-        builder.Metadata.Add(new ProducesResponseTypeMetadata(409, typeof(Envelope<Errors>), ["application/json"]));
+        builder.Metadata.Add(new ProducesResponseTypeMetadata(
+            StatusCodes.Status200OK, typeof(Envelope<TValue>), ["application/json"]));
+
+        // Ответы с ошибкой пишет ErrorsResult: это необобщённый Envelope, у которого заполнен только errorList.
+        int[] errorStatusCodes =
+        [
+            StatusCodes.Status400BadRequest,
+            StatusCodes.Status401Unauthorized,
+            StatusCodes.Status403Forbidden,
+            StatusCodes.Status404NotFound,
+            StatusCodes.Status409Conflict,
+            StatusCodes.Status500InternalServerError,
+        ];
+
+        foreach (int statusCode in errorStatusCodes)
+        {
+            builder.Metadata.Add(new ProducesResponseTypeMetadata(statusCode, typeof(Envelope), ["application/json"]));
+        }
     }
 }

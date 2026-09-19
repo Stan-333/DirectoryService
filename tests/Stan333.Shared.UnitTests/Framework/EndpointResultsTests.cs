@@ -1,7 +1,10 @@
+using System.Reflection;
 using System.Text.Json;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Patterns;
 using Stan333.Framework.EndpointResults;
 using Stan333.SharedKernel;
 using IResult = Microsoft.AspNetCore.Http.IResult;
@@ -11,6 +14,21 @@ namespace Stan333.Shared.UnitTests.Framework;
 public class EndpointResultsTests
 {
     private static JsonSerializerOptions WebOptions => new(JsonSerializerDefaults.Web);
+
+    [Fact]
+    public void EndpointResult_describes_success_and_all_error_responses()
+    {
+        var builder = new RouteEndpointBuilder(null, RoutePatternFactory.Parse("/"), 0);
+        MethodInfo method = typeof(EndpointResultsTests).GetMethod(nameof(ExecuteAsync), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        EndpointResult<Guid>.PopulateMetadata(method, builder);
+
+        List<ProducesResponseTypeMetadata> produces = builder.Metadata.OfType<ProducesResponseTypeMetadata>().ToList();
+        produces.Should().ContainSingle(m => m.StatusCode == 200).Which.Type.Should().Be(typeof(Envelope<Guid>));
+        produces.Where(m => m.StatusCode != 200).Select(m => m.StatusCode)
+            .Should().BeEquivalentTo([400, 401, 403, 404, 409, 500]);
+        produces.Where(m => m.StatusCode != 200).Should().OnlyContain(m => m.Type == typeof(Envelope));
+    }
 
     [Fact]
     public async Task ErrorsResult_writes_status_of_error_type_and_envelope()

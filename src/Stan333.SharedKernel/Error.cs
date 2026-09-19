@@ -21,7 +21,7 @@ public record Error
         InvalidField = invalidField;
     }
 
-    public static Error NotFound(string? code, string message, Guid? id = null)
+    public static Error NotFound(string? code, string message)
         => new(code ?? "record.not.found", message, ErrorType.NotFound);
 
     public static Error Validation(string? code, string message, string? invalidField = null)
@@ -40,18 +40,6 @@ public record Error
         => new(code ?? "authorization", message, ErrorType.Authorization);
 
     public Errors ToErrors() => new([this]);
-
-    // public string Serialize() => string.Join(SEPARATOR, Code, Message, Type);
-    //
-    // public static Error Deserialize(string serialized)
-    // {
-    //     var parts = serialized.Split(SEPARATOR);
-    //
-    //     if (parts.Length < 3 || Enum.TryParse<ErrorType>(parts[2], out var type) == false)
-    //         throw new ArgumentException("Invalid serialized error");
-    //
-    //     return new Error(parts[0], parts[1], type);
-    // }
 }
 
 /// <summary>

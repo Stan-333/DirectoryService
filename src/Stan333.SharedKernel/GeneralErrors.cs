@@ -17,7 +17,7 @@ public static class GeneralErrors
     public static Error ListHasDuplicates(string? listName = null)
     {
         string label = listName is null ? string.Empty : $"'{listName}' ";
-        return Error.Validation("value.is.invalid", $"Список {label}имеет дубликаты");
+        return Error.Validation("list.has.duplicates", $"Список {label}имеет дубликаты");
     }
 
     public static Error AlreadyExist(string? recordName = null)
@@ -29,7 +29,7 @@ public static class GeneralErrors
     public static Error NotFound(Guid? id = null, string? name = null)
     {
         string forId = id is null ? string.Empty : $" по Id '{id}'";
-        return Error.NotFound("record.not.found", $"{name ?? "запись"} не найдена{forId}", id);
+        return Error.NotFound("record.not.found", $"{name ?? "запись"} не найдена{forId}");
     }
 
     public static Error Failure(string? message = null)
