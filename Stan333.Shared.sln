@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stan333.SharedKernel", "src\Stan333.SharedKernel\Stan333.SharedKernel.csproj", "{DE52F3A0-2C9E-4AC7-92D6-07F233F7681E}"
 EndProject
