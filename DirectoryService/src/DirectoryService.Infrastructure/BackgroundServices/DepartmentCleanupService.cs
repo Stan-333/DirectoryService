@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using Microsoft.EntityFrameworkCore;

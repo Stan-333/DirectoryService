@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using DirectoryService.Domain.Departments;

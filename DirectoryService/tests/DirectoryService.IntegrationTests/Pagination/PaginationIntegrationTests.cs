@@ -1,4 +1,4 @@
-﻿using DirectoryService.Application.Departments.Queries;
+using DirectoryService.Application.Departments.Queries;
 using DirectoryService.Application.Locations.Queries;
 using DirectoryService.Contracts.Departments.Requests;
 using DirectoryService.Contracts.Departments.Responses;

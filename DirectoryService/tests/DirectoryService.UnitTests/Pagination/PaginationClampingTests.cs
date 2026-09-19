@@ -1,4 +1,4 @@
-﻿using DirectoryService.Contracts;
+using DirectoryService.Contracts;
 using DirectoryService.Contracts.Departments.Requests;
 using DirectoryService.Contracts.Locations.Requests;
 using FluentAssertions;
