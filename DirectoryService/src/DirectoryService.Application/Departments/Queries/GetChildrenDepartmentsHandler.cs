@@ -60,10 +60,14 @@ public class GetChildrenDepartmentsHandler : IQueryHandler<GetChildrenDepartment
                    updated_at
             FROM departments
             WHERE parent_id = @parentId
+              AND is_active = true
             ORDER BY created_at
             OFFSET @offset LIMIT @child_limit)
             SELECT *,
-                   (EXISTS(SELECT 1 FROM departments WHERE parent_id = children.department_id)) AS has_more_children
+                   (EXISTS(SELECT 1
+                           FROM departments
+                           WHERE parent_id = children.department_id
+                             AND is_active = true)) AS has_more_children
             FROM children;
             """,
             param: parameters);

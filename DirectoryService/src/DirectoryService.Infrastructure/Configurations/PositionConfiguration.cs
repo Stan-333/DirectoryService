@@ -1,4 +1,5 @@
 using DirectoryService.Domain.Positions;
+using DirectoryService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -23,7 +24,7 @@ public class PositionConfiguration : IEntityTypeConfiguration<Position>
             .HasConversion(p => p.Value, p => PositionName.Create(p).Value);
 
         builder.HasIndex(p => p.Name)
-            .HasDatabaseName("idx_position_name")
+            .HasDatabaseName(IndexNames.POSITION_NAME)
             .HasFilter("is_active = true")
             .IsUnique();
 
