@@ -3,22 +3,24 @@ USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 
+# Контекст сборки — корень монорепо (docker-compose: context: ..),
+# чтобы в образ попали общие props-файлы и библиотеки Shared.
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["global.json", "./"]
 COPY ["Directory.Build.props", "./"]
 COPY ["Directory.Packages.props", "./"]
-COPY ["src/DirectoryService.Web/DirectoryService.Web.csproj", "src/DirectoryService.Web/"]
-COPY ["src/DirectoryService.Application/DirectoryService.Application.csproj", "src/DirectoryService.Application/"]
-COPY ["src/DirectoryService.Contracts/DirectoryService.Contracts.csproj", "src/DirectoryService.Contracts/"]
-COPY ["src/Shared/Shared.csproj", "src/Shared/"]
-COPY ["src/DirectoryService.Domain/DirectoryService.Domain.csproj", "src/DirectoryService.Domain/"]
-COPY ["src/DirectoryService.Infrastructure/DirectoryService.Infrastructure.csproj", "src/DirectoryService.Infrastructure/"]
-COPY ["src/DirectoryService.Presenters/DirectoryService.Presenters.csproj", "src/DirectoryService.Presenters/"]
-RUN dotnet restore "src/DirectoryService.Web/DirectoryService.Web.csproj"
+COPY ["DirectoryService/src/DirectoryService.Web/DirectoryService.Web.csproj", "DirectoryService/src/DirectoryService.Web/"]
+COPY ["DirectoryService/src/DirectoryService.Application/DirectoryService.Application.csproj", "DirectoryService/src/DirectoryService.Application/"]
+COPY ["DirectoryService/src/DirectoryService.Contracts/DirectoryService.Contracts.csproj", "DirectoryService/src/DirectoryService.Contracts/"]
+COPY ["DirectoryService/src/Shared/Shared.csproj", "DirectoryService/src/Shared/"]
+COPY ["DirectoryService/src/DirectoryService.Domain/DirectoryService.Domain.csproj", "DirectoryService/src/DirectoryService.Domain/"]
+COPY ["DirectoryService/src/DirectoryService.Infrastructure/DirectoryService.Infrastructure.csproj", "DirectoryService/src/DirectoryService.Infrastructure/"]
+COPY ["DirectoryService/src/DirectoryService.Presenters/DirectoryService.Presenters.csproj", "DirectoryService/src/DirectoryService.Presenters/"]
+RUN dotnet restore "DirectoryService/src/DirectoryService.Web/DirectoryService.Web.csproj"
 COPY . .
-WORKDIR "/src/src/DirectoryService.Web"
+WORKDIR "/src/DirectoryService/src/DirectoryService.Web"
 RUN dotnet build "./DirectoryService.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
