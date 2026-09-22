@@ -2,7 +2,7 @@ using System.Text.Json;
 using FluentAssertions;
 using Shared.Kernel;
 
-namespace Shared.UnitTests.SharedKernel;
+namespace Shared.UnitTests.Kernel;
 
 public class ErrorJsonTests
 {
