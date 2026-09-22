@@ -1,18 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <!-- Тесты исходников Kernel. Ссылка именно на проект, а не на пакет из фида:
+         так проверяется следующая версия до публикации. Остальные проекты берут Kernel из фида. -->
     <PropertyGroup>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    </ItemGroup>
-
-    <ItemGroup>
         <PackageReference Include="coverlet.collector" />
         <PackageReference Include="FluentAssertions" />
-        <PackageReference Include="Microsoft.AspNetCore.TestHost" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio" />
@@ -23,8 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Shared.Core\Shared.Core.csproj" />
-        <ProjectReference Include="..\..\src\Shared.Framework\Shared.Framework.csproj" />
+        <ProjectReference Include="..\..\src\Shared.Kernel\Shared.Kernel.csproj" />
     </ItemGroup>
 
 </Project>

@@ -10,10 +10,8 @@
       <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
       <PackageReference Include="Scrutor" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Shared.Kernel\Shared.Kernel.csproj" />
+      <!-- Kernel берётся из фида, как у всех потребителей: иначе в приложении окажутся две копии Shared.Kernel. -->
+      <PackageReference Include="Stan333.SharedKernel" />
     </ItemGroup>
 
 </Project>

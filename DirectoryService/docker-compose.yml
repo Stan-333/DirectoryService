@@ -23,6 +23,9 @@ services:
       # Корень монорепо: образу нужны общие props-файлы и библиотеки Shared.
       context: ..
       dockerfile: DirectoryService/Dockerfile
+      # PAT для GitHub Packages (Stan333.SharedKernel), только на время restore; см. secrets ниже.
+      secrets:
+        - nuget_token
     restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
@@ -118,6 +121,12 @@ services:
       - '8081:80'
     volumes:
       - seq-data:/data
+
+secrets:
+  # Значение берётся из переменной окружения NUGET_AUTH_TOKEN или из .env рядом с этим файлом
+  # (PAT classic с правом read:packages). В репозиторий токен не попадает: .env в .gitignore.
+  nuget_token:
+    environment: NUGET_AUTH_TOKEN
 
 volumes:
   postgresql_data:
