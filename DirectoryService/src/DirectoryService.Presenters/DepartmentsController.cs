@@ -1,5 +1,4 @@
 using CSharpFunctionalExtensions;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments.CreateDepartment;
 using DirectoryService.Application.Departments.Queries;
 using DirectoryService.Application.Departments.SoftDeleteDepartment;
@@ -8,8 +7,10 @@ using DirectoryService.Application.Departments.UpdateDepartmentParent;
 using DirectoryService.Contracts.Departments.Requests;
 using DirectoryService.Contracts.Departments.Responses;
 using Microsoft.AspNetCore.Mvc;
-using Shared;
-using Shared.EndpointResults;
+using Shared.Core.Abstractions;
+using Shared.Core.Http;
+using Shared.Framework.EndpointResults;
+using Shared.Kernel;
 
 namespace DirectoryService.Presenters;
 

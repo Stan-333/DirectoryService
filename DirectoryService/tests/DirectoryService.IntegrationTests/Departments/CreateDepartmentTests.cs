@@ -5,7 +5,7 @@ using DirectoryService.Infrastructure;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Shared;
+using Shared.Kernel;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
@@ -132,7 +132,7 @@ public class CreateDepartmentTests : DirectoryBaseTests
 
         // Assert
         Assert.True(second.IsFailure);
-        Assert.Contains(second.Error, e => e.Type == ErrorType.CONFLICT);
+        Assert.Contains(second.Error, e => e.Type == ErrorType.Conflict);
     }
 
     [Fact]

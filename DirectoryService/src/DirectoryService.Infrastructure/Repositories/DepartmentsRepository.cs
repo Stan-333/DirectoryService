@@ -8,7 +8,7 @@ using DirectoryService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using Shared;
+using Shared.Kernel;
 
 namespace DirectoryService.Infrastructure.Repositories;
 

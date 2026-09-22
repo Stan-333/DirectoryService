@@ -84,8 +84,13 @@ public class LocationsApiTests : DirectoryBaseTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         JsonElement result = (await EnvelopeJson.ReadAsync(response)).GetProperty("result");
-        Assert.Equal(1, result.GetProperty("locations").GetArrayLength());
+        Assert.Equal(1, result.GetProperty("items").GetArrayLength());
         Assert.Equal(3, result.GetProperty("totalCount").GetInt64());
+        Assert.Equal(2, result.GetProperty("page").GetInt32());
+        Assert.Equal(2, result.GetProperty("pageSize").GetInt32());
+        Assert.Equal(2, result.GetProperty("totalPages").GetInt64());
+        Assert.True(result.GetProperty("hasPreviousPage").GetBoolean());
+        Assert.False(result.GetProperty("hasNextPage").GetBoolean());
     }
 
     [Fact]
@@ -101,8 +106,11 @@ public class LocationsApiTests : DirectoryBaseTests
         // Page=0 превращается в 1, PageSize=0 — в минимальный размер страницы 1.
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         JsonElement result = (await EnvelopeJson.ReadAsync(response)).GetProperty("result");
-        Assert.Equal(1, result.GetProperty("locations").GetArrayLength());
+        Assert.Equal(1, result.GetProperty("items").GetArrayLength());
         Assert.Equal(3, result.GetProperty("totalCount").GetInt64());
+        Assert.Equal(1, result.GetProperty("page").GetInt32());
+        Assert.Equal(1, result.GetProperty("pageSize").GetInt32());
+        Assert.Equal(3, result.GetProperty("totalPages").GetInt64());
     }
 
     private static CreateLocationRequest BuildRequest(string name, string house) =>

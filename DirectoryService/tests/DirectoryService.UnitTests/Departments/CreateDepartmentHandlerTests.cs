@@ -1,5 +1,4 @@
 using CSharpFunctionalExtensions;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using DirectoryService.Application.Departments.CreateDepartment;
 using DirectoryService.Contracts.Departments.Requests;
@@ -8,7 +7,8 @@ using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using Shared;
+using Shared.Core.Abstractions;
+using Shared.Kernel;
 
 namespace DirectoryService.UnitTests.Departments;
 
@@ -41,7 +41,7 @@ public class CreateDepartmentHandlerTests
         repository.AddAsync(Arg.Any<Department>(), Arg.Any<CancellationToken>())
             .Returns(call => call.Arg<Department>().Id.Value);
 
-        transactionManager.BeginTransactionAsync(Arg.Any<CancellationToken>(), null)
+        transactionManager.BeginTransactionAsync(Arg.Any<CancellationToken>())
             .Returns(Result.Success<ITransactionScope, Error>(transactionScope));
         transactionManager.SaveChangesAsync(Arg.Any<CancellationToken>())
             .Returns(UnitResult.Success<Error>());
@@ -87,7 +87,7 @@ public class CreateDepartmentHandlerTests
         repository.GetByIdWithLockAsync(Arg.Any<DepartmentId>(), Arg.Any<CancellationToken>())
             .Returns(GeneralErrors.NotFound(Guid.NewGuid(), nameof(Department)));
 
-        transactionManager.BeginTransactionAsync(Arg.Any<CancellationToken>(), null)
+        transactionManager.BeginTransactionAsync(Arg.Any<CancellationToken>())
             .Returns(Result.Success<ITransactionScope, Error>(transactionScope));
 
         var sut = new CreateDepartmentHandler(

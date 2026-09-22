@@ -14,7 +14,7 @@ using DirectoryService.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Shared;
+using Shared.Kernel;
 
 namespace DirectoryService.IntegrationTests.Caching;
 

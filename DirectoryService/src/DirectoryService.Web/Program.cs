@@ -1,10 +1,11 @@
 using DirectoryService.Infrastructure;
 using DirectoryService.Infrastructure.Seeding;
 using DirectoryService.Web;
-using DirectoryService.Web.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using Serilog.Events;
+using Shared.Framework.Middlewares;
+using Shared.Framework.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,8 +49,7 @@ app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("OpenApi:Enabled"))
 {
-    app.MapOpenApi();
-    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "DirectoryService"));
+    app.UseOpenApiUi();
 }
 
 if (app.Environment.IsDevelopment())

@@ -1,6 +1,6 @@
 using System.Data.Common;
-using DirectoryService.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.Infrastructure.Database;
 
@@ -13,7 +13,7 @@ public class DbConnectionFactory : IDbConnectionFactory
         _dbContext = dbContext;
     }
 
-    public async Task<DbConnection> CreateOpenConnectionAsync(CancellationToken cancellationToken = default)
+    public async Task<DbConnection> GetOpenConnectionAsync(CancellationToken cancellationToken = default)
     {
         var connection = _dbContext.Database.GetDbConnection();
 

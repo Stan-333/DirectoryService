@@ -1,4 +1,3 @@
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using DirectoryService.Application.Departments.Queries;
 using DirectoryService.Contracts.Departments;
@@ -6,6 +5,7 @@ using DirectoryService.Contracts.Departments.Requests;
 using DirectoryService.Contracts.Departments.Responses;
 using FluentAssertions;
 using NSubstitute;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.UnitTests.Departments;
 

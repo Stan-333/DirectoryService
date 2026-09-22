@@ -1,5 +1,6 @@
 using DirectoryService.Application;
 using DirectoryService.Infrastructure;
+using Shared.Framework.Swagger;
 
 namespace DirectoryService.Web;
 
@@ -17,26 +18,7 @@ public static class DependencyInjection
     {
         services.AddControllers();
 
-        /*// На случай ошибки необходимо добавить код, позволяющий обрабатывать кастомный класс Error
-        services.AddOpenApi(options =>
-        {
-            options.AddSchemaTransformer((schema, context, _) =>
-            {
-                if (context.JsonTypeInfo.Type != typeof(Envelope<Errors>))
-                {
-                    return Task.CompletedTask;
-                }
-
-                if (schema.Properties.TryGetValue("errors", out var errorsProp))
-                {
-                    errorsProp.Items.Reference = new OpenApiReference { Type = ReferenceType.Schema, Id = "Error" };
-                }
-
-                return Task.CompletedTask;
-            });
-        });*/
-
-        services.AddOpenApi();
+        services.AddOpenApiSpec("DirectoryService", "v1");
 
         return services;
     }

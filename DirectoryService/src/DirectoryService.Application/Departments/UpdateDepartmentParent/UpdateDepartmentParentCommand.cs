@@ -1,5 +1,5 @@
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.Departments.Requests;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.Application.Departments.UpdateDepartmentParent;
 

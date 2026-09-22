@@ -1,8 +1,8 @@
 using CSharpFunctionalExtensions;
-using DirectoryService.Application.Abstractions;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using Shared;
+using Shared.Core.Abstractions;
+using Shared.Kernel;
 
 namespace DirectoryService.Infrastructure.Database;
 

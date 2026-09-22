@@ -2,14 +2,15 @@ using System.Linq.Expressions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts;
 using DirectoryService.Contracts.Locations;
-using DirectoryService.Contracts.Locations.Responses;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
+using Shared.Core.Abstractions;
+using Shared.Kernel;
 
 namespace DirectoryService.Application.Locations.Queries;
 
-public class GetLocationsWithFiltersHandler : IQueryHandler<GetLocationsWithFiltersResponse, GetLocationsWithFiltersQuery>
+public class GetLocationsWithFiltersHandler : IQueryHandler<PagedResult<GetLocationDto>, GetLocationsWithFiltersQuery>
 {
     private readonly IReadDbContext _readDbContext;
 
@@ -18,7 +19,7 @@ public class GetLocationsWithFiltersHandler : IQueryHandler<GetLocationsWithFilt
         _readDbContext = readDbContext;
     }
 
-    public async Task<GetLocationsWithFiltersResponse> Handle(
+    public async Task<PagedResult<GetLocationDto>> Handle(
         GetLocationsWithFiltersQuery query,
         CancellationToken cancellationToken)
     {
@@ -56,13 +57,16 @@ public class GetLocationsWithFiltersHandler : IQueryHandler<GetLocationsWithFilt
             : locationsQuery.OrderByDescending(keySelector);
 
         int totalCount = await locationsQuery.CountAsync(cancellationToken);
-        int offset = PaginationConstraints.CalculateOffset(
-            query.Request.Pagination.Page,
-            query.Request.Pagination.PageSize);
+
+        // PaginationRequest уже нормализует значения, но через object initializer их можно обойти,
+        // а PagedResult принимает только page >= 1 и pageSize >= 1.
+        int pageSize = PaginationConstraints.NormalizePageSize(query.Request.Pagination.PageSize);
+        int page = PaginationConstraints.NormalizePage(query.Request.Pagination.Page, pageSize);
+        int offset = PaginationConstraints.CalculateOffset(page, pageSize);
 
         locationsQuery = locationsQuery
             .Skip(offset)
-            .Take(query.Request.Pagination.PageSize);
+            .Take(pageSize);
 
         var locations = await locationsQuery
             .Select(l => new GetLocationDto
@@ -85,6 +89,6 @@ public class GetLocationsWithFiltersHandler : IQueryHandler<GetLocationsWithFilt
             })
             .ToListAsync(cancellationToken);
 
-        return new GetLocationsWithFiltersResponse(locations, totalCount);
+        return new PagedResult<GetLocationDto>(locations, totalCount, page, pageSize);
     }
 }

@@ -1,10 +1,10 @@
 using CSharpFunctionalExtensions;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Positions.CreatePosition;
 using DirectoryService.Contracts.Positions;
 using Microsoft.AspNetCore.Mvc;
-using Shared;
-using Shared.EndpointResults;
+using Shared.Core.Abstractions;
+using Shared.Framework.EndpointResults;
+using Shared.Kernel;
 
 namespace DirectoryService.Presenters;
 

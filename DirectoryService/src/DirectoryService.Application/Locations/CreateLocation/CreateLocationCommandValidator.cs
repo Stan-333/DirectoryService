@@ -1,7 +1,7 @@
-using DirectoryService.Application.Validation;
 using DirectoryService.Domain.Locations;
 using FluentValidation;
-using Shared;
+using Shared.Core.Validation;
+using Shared.Kernel;
 using TimeZone = DirectoryService.Domain.Locations.TimeZone;
 
 namespace DirectoryService.Application.Locations.CreateLocation;
