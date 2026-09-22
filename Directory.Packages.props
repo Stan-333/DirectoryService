@@ -1,6 +1,8 @@
 <Project>
   <!-- Версии пакетов для всего монорепо: DirectoryService, Shared и будущие сервисы. -->
   <ItemGroup>
+    <!-- Собственные пакеты из GitHub Packages (источник "github" в nuget.config) -->
+    <PackageVersion Include="Stan333.SharedKernel" Version="0.1.0" />
     <!-- ASP.NET / OpenAPI -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />

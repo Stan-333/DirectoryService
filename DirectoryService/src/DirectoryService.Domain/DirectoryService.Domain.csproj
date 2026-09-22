@@ -7,11 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\Shared\src\Shared.Kernel\Shared.Kernel.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="CSharpFunctionalExtensions"/>
+      <PackageReference Include="Stan333.SharedKernel" />
       <PackageReference Include="TimeZoneConverter"/>
     </ItemGroup>
 

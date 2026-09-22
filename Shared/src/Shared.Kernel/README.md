@@ -98,6 +98,11 @@ public async Task<PagedResult<LocationDto>> Handle(GetLocationsQuery query, Canc
    собирает решение Shared, запускает тесты, проверяет, что тег совпадает с `<Version>`, упаковывает Kernel
    и публикует пакет в GitHub Packages.
 5. Создать GitHub Release из тега: в описании перечислить изменения и дать ссылку на коммит релиза.
+6. Перевести потребителей на новую версию: поднять `Stan333.SharedKernel` в `Directory.Packages.props`.
+
+Все проекты монорепозитория, включая Shared.Core, берут Kernel из фида. Поэтому новые типы Kernel
+доступны остальным проектам только после публикации. Исходники Kernel до публикации проверяет
+`Shared/tests/Shared.Kernel.Tests`: этот проект ссылается на Kernel как на проект.
 
 В пакете есть `Shared.Kernel.pdb` и XML-документация. В `.nuspec` записаны адрес репозитория
 и коммит, из которого собран пакет, поэтому по версии всегда можно найти исходный код.
