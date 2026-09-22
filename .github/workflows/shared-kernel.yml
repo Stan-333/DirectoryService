@@ -1,0 +1,108 @@
+# Stan333.SharedKernel: сборка, тесты и упаковка на каждом PR, который затрагивает Shared.
+# Публикация в GitHub Packages — по тегу vX.Y.Z (релиз) или вручную из main (workflow_dispatch с publish: true).
+# Порядок выпуска релиза описан в Shared/src/Shared.Kernel/README.md.
+name: Shared.Kernel package
+
+on:
+  push:
+    tags: ['v*.*.*']
+  pull_request:
+    paths:
+      - 'Shared/**'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - '.editorconfig'
+      - '.github/workflows/shared-kernel.yml'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Опубликовать пакет в GitHub Packages (только из main)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shared-kernel-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  pack:
+    name: Build, test, pack
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Shared/Shared.sln
+
+      - name: Версия пакета
+        id: version
+        run: |
+          version=$(dotnet msbuild Shared/src/Shared.Kernel/Shared.Kernel.csproj -getProperty:Version)
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Тег $GITHUB_REF_NAME не совпадает с <Version>$version</Version> в Shared.Kernel.csproj"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: dotnet build Shared/Shared.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test Shared/tests/Shared.UnitTests/Shared.UnitTests.csproj -c Release --no-build
+
+      - name: Pack
+        run: dotnet pack Shared/src/Shared.Kernel/Shared.Kernel.csproj -c Release --no-build -o artifacts
+
+      - name: Проверка содержимого пакета
+        run: |
+          package="artifacts/Stan333.SharedKernel.${{ steps.version.outputs.version }}.nupkg"
+          unzip -l "$package"
+          for file in lib/net10.0/Shared.Kernel.dll lib/net10.0/Shared.Kernel.pdb lib/net10.0/Shared.Kernel.xml README.md; do
+            unzip -l "$package" | grep -q " $file\$" || { echo "::error::В пакете нет $file"; exit 1; }
+          done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+          if-no-files-found: error
+
+  publish:
+    name: Publish to GitHub Packages
+    needs: pack
+    if: >-
+      github.ref_type == 'tag' ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: nupkg
+          path: artifacts
+
+      # Опубликованная версия неизменяема: повторная публикация той же версии завершится ошибкой.
+      - name: Push
+        run: >-
+          dotnet nuget push "artifacts/*.nupkg"
+          --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+          --api-key "${{ secrets.GITHUB_TOKEN }}"
