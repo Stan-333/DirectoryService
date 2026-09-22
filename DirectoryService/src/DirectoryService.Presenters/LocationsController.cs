@@ -1,8 +1,8 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Locations.CreateLocation;
 using DirectoryService.Application.Locations.Queries;
+using DirectoryService.Contracts.Locations;
 using DirectoryService.Contracts.Locations.Requests;
-using DirectoryService.Contracts.Locations.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core.Abstractions;
 using Shared.Core.Http;
@@ -29,15 +29,15 @@ public sealed class LocationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<Envelope<GetLocationsWithFiltersResponse>> GetByFilters(
+    public async Task<Envelope<PagedResult<GetLocationDto>>> GetByFilters(
         [FromQuery] GetLocationsWithFiltersRequest request,
-        [FromServices] IQueryHandler<GetLocationsWithFiltersResponse, GetLocationsWithFiltersQuery> handler,
+        [FromServices] IQueryHandler<PagedResult<GetLocationDto>, GetLocationsWithFiltersQuery> handler,
         CancellationToken cancellationToken)
     {
         var query = new GetLocationsWithFiltersQuery(request);
 
         var result = await handler.Handle(query, cancellationToken);
 
-        return Envelope<GetLocationsWithFiltersResponse>.Ok(result);
+        return Envelope<PagedResult<GetLocationDto>>.Ok(result);
     }
 }
