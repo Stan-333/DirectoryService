@@ -1,5 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <!-- NuGet-пакет Stan333.SharedKernel. Правила версий и выпуска релиза описаны в README.md. -->
+    <PropertyGroup>
+      <PackageId>Stan333.SharedKernel</PackageId>
+      <Version>0.1.0</Version>
+      <Authors>Stan-333</Authors>
+      <Description>Базовые типы сервисов: Error, Errors, ErrorType, GeneralErrors, AppException и PagedResult. Ожидаемые ошибки возвращаются через Result&lt;T, Errors&gt; из CSharpFunctionalExtensions.</Description>
+      <PackageTags>shared-kernel;errors;result;pagination</PackageTags>
+      <PackageReadmeFile>README.md</PackageReadmeFile>
+      <RepositoryUrl>https://github.com/Stan-333/DirectoryService</RepositoryUrl>
+      <RepositoryType>git</RepositoryType>
+      <!-- В nuspec попадают адрес репозитория и коммит, из которого собран пакет. -->
+      <PublishRepositoryUrl>true</PublishRepositoryUrl>
+      <GenerateDocumentationFile>true</GenerateDocumentationFile>
+      <!-- GitHub Packages не принимает пакеты символов (.snupkg), поэтому .pdb кладём в основной пакет. -->
+      <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    </PropertyGroup>
+
+    <!-- В CI пути к исходникам в .pdb нормализуются, и сборка из одного коммита даёт тот же результат. -->
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+      <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
     <ItemGroup>
       <PackageReference Include="CSharpFunctionalExtensions" />
     </ItemGroup>
