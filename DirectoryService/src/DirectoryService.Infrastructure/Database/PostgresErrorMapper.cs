@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Shared;
+using Shared.Kernel;
 
 namespace DirectoryService.Infrastructure.Database;
 

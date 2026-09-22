@@ -1,11 +1,11 @@
 using System.Data;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Positions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.Infrastructure.Seeding;
 

@@ -1,9 +1,9 @@
 using System.Data;
 using Dapper;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Contracts.Departments.Responses;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.Application.Departments.Queries;
 
@@ -38,7 +38,7 @@ public class GetRootDepartmentsWithChildrenHandler
         GetRootDepartmentsWithChildrenQuery query,
         CancellationToken cancellationToken)
     {
-        var connection = await _dbConnectionFactory.CreateOpenConnectionAsync(cancellationToken);
+        var connection = await _dbConnectionFactory.GetOpenConnectionAsync(cancellationToken);
         var parameters = new DynamicParameters();
         parameters.Add("child_limit", query.Request.Prefetch);
         parameters.Add(

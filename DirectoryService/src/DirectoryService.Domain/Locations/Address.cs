@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Shared;
-using Shared;
+using Shared.Kernel;
 
 namespace DirectoryService.Domain.Locations;
 

@@ -1,12 +1,13 @@
 using CSharpFunctionalExtensions;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Locations.CreateLocation;
 using DirectoryService.Application.Locations.Queries;
 using DirectoryService.Contracts.Locations.Requests;
 using DirectoryService.Contracts.Locations.Responses;
 using Microsoft.AspNetCore.Mvc;
-using Shared;
-using Shared.EndpointResults;
+using Shared.Core.Abstractions;
+using Shared.Core.Http;
+using Shared.Framework.EndpointResults;
+using Shared.Kernel;
 
 namespace DirectoryService.Presenters;
 

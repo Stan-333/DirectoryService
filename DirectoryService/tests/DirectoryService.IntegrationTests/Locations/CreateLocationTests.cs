@@ -6,7 +6,7 @@ using DirectoryService.Contracts.Locations.Requests;
 using DirectoryService.Domain.Locations;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Shared;
+using Shared.Kernel;
 using TimeZone = DirectoryService.Domain.Locations.TimeZone;
 
 namespace DirectoryService.IntegrationTests.Locations;
@@ -49,7 +49,7 @@ public class CreateLocationTests : DirectoryBaseTests
 
         // Assert
         Assert.True(second.IsFailure);
-        Assert.Contains(second.Error, e => e.Type == ErrorType.CONFLICT);
+        Assert.Contains(second.Error, e => e.Type == ErrorType.Conflict);
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class CreateLocationTests : DirectoryBaseTests
 
         // Assert
         Assert.True(second.IsFailure);
-        Assert.Contains(second.Error, e => e.Type == ErrorType.CONFLICT);
+        Assert.Contains(second.Error, e => e.Type == ErrorType.Conflict);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class CreateLocationTests : DirectoryBaseTests
         Assert.True(second.IsFailure);
         Assert.Contains(
             second.Error,
-            error => error.Type == ErrorType.CONFLICT
+            error => error.Type == ErrorType.Conflict
                      && error.Message == "Локация с таким адресом уже существует");
     }
 

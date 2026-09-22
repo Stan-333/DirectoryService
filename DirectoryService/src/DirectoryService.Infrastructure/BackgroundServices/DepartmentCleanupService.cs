@@ -1,10 +1,10 @@
 using Dapper;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.Infrastructure.BackgroundServices;
 

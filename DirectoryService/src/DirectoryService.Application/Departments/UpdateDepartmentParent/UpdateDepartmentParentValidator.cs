@@ -1,6 +1,6 @@
-using DirectoryService.Application.Validation;
 using FluentValidation;
-using Shared;
+using Shared.Core.Validation;
+using Shared.Kernel;
 
 namespace DirectoryService.Application.Departments.UpdateDepartmentParent;
 

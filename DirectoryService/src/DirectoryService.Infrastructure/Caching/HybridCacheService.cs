@@ -1,6 +1,6 @@
-using DirectoryService.Application.Abstractions;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.Infrastructure.Caching;
 

@@ -9,7 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\DirectoryService.Contracts\DirectoryService.Contracts.csproj" />
       <ProjectReference Include="..\DirectoryService.Domain\DirectoryService.Domain.csproj" />
-      <ProjectReference Include="..\Shared\Shared.csproj" />
+      <ProjectReference Include="..\..\..\Shared\src\Shared.Core\Shared.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -19,10 +19,8 @@
 
     <ItemGroup>
       <PackageReference Include="Dapper" />
-      <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
       <PackageReference Include="Microsoft.EntityFrameworkCore" />
       <PackageReference Include="Microsoft.Extensions.Logging.Console"/>
-      <PackageReference Include="Scrutor"/>
       <PackageReference Include="TimeZoneConverter"/>
     </ItemGroup>
 

@@ -1,12 +1,12 @@
 using System.Data;
 using CSharpFunctionalExtensions;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
-using DirectoryService.Application.Validation;
 using DirectoryService.Domain.Departments;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Shared;
+using Shared.Core.Abstractions;
+using Shared.Core.Validation;
+using Shared.Kernel;
 
 namespace DirectoryService.Application.Departments.UpdateDepartmentParent;
 
@@ -51,8 +51,8 @@ public class UpdateDepartmentParentHandler : ICommandHandler<Guid, UpdateDepartm
         }
 
         var transactionScopeResult = await _transactionManager.BeginTransactionAsync(
-            cancellationToken,
-            IsolationLevel.RepeatableRead);
+            IsolationLevel.RepeatableRead,
+            cancellationToken);
 
         if (transactionScopeResult.IsFailure)
         {

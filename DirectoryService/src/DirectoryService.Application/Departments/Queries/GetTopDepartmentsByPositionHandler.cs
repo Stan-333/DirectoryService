@@ -1,7 +1,7 @@
 using Dapper;
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Contracts.Departments.Responses;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.Application.Departments.Queries;
 
@@ -36,7 +36,7 @@ public class GetTopDepartmentsByPositionHandler
         GetTopDepartmentsByPositionQuery query,
         CancellationToken cancellationToken)
     {
-        var connection = await _dbConnectionFactory.CreateOpenConnectionAsync(cancellationToken);
+        var connection = await _dbConnectionFactory.GetOpenConnectionAsync(cancellationToken);
         var parameters = new DynamicParameters();
         parameters.Add("RowsCount", query.Request.RowsCount);
         var departmentsDto = await connection.QueryAsync<DepartmentWithPositionCountDto>(

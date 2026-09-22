@@ -1,8 +1,8 @@
-using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Departments;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.IntegrationTests.Infrastructure;
 

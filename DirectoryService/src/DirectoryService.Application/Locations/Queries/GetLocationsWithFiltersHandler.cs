@@ -6,6 +6,7 @@ using DirectoryService.Contracts.Locations.Responses;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
+using Shared.Core.Abstractions;
 
 namespace DirectoryService.Application.Locations.Queries;
 
