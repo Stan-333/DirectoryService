@@ -36,6 +36,10 @@ jobs:
   pack:
     name: Build, test, pack
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Shared.Core и Shared.Framework берут опубликованный Stan333.SharedKernel из GitHub Packages.
+      packages: read
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -45,8 +49,11 @@ jobs:
         with:
           global-json-file: global.json
 
+      # Учётные данные для источника "github" из nuget.config; переменная видна только этому шагу.
       - name: Restore
         run: dotnet restore Shared/Shared.sln
+        env:
+          NuGetPackageSourceCredentials_github: Username=${{ github.actor }};Password=${{ secrets.GITHUB_TOKEN }}
 
       - name: Версия пакета
         id: version
@@ -61,8 +68,9 @@ jobs:
       - name: Build
         run: dotnet build Shared/Shared.sln -c Release --no-restore
 
+      # Shared.Kernel.Tests проверяет исходники Kernel, Shared.UnitTests — Core и Framework поверх пакета из фида.
       - name: Test
-        run: dotnet test Shared/tests/Shared.UnitTests/Shared.UnitTests.csproj -c Release --no-build
+        run: dotnet test Shared/Shared.sln -c Release --no-build
 
       - name: Pack
         run: dotnet pack Shared/src/Shared.Kernel/Shared.Kernel.csproj -c Release --no-build -o artifacts
