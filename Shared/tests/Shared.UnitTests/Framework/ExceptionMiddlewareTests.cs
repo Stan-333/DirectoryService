@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging.Abstractions;
+using Shared.Core.Http;
 using Shared.Framework.EndpointResults;
 using Shared.Framework.Middlewares;
 using Shared.Kernel;

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Shared.Core.Http;
 using Shared.Kernel;
 
 namespace Shared.Framework.EndpointResults;

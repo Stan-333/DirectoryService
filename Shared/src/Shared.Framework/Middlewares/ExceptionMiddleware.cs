@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Shared.Core.Http;
 using Shared.Framework.EndpointResults;
 using Shared.Kernel;
 using Shared.Kernel.Exceptions;

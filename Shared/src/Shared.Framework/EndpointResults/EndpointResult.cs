@@ -3,6 +3,7 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Metadata;
+using Shared.Core.Http;
 using Shared.Kernel;
 using IResult = Microsoft.AspNetCore.Http.IResult;
 

@@ -2,7 +2,7 @@ using FluentAssertions;
 using Shared.Kernel;
 using Shared.Kernel.Exceptions;
 
-namespace Shared.UnitTests.SharedKernel;
+namespace Shared.UnitTests.Kernel;
 
 public class AppExceptionTests
 {

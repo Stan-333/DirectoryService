@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Shared.Kernel;
 
-namespace Shared.UnitTests.SharedKernel;
+namespace Shared.UnitTests.Kernel;
 
 public class GeneralErrorsTests
 {

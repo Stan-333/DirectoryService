@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Shared.Kernel;
 
-namespace Shared.Framework.EndpointResults;
+namespace Shared.Core.Http;
 
 public record Envelope<T>
 {

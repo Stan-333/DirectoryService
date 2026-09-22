@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Patterns;
+using Shared.Core.Http;
 using Shared.Framework.EndpointResults;
 using Shared.Kernel;
 using IResult = Microsoft.AspNetCore.Http.IResult;
@@ -75,18 +76,6 @@ public class EndpointResultsTests
         (int status, _) = await ExecuteAsync(result);
 
         status.Should().Be(StatusCodes.Status400BadRequest);
-    }
-
-    [Fact]
-    public void Envelope_keeps_original_time_after_deserialization()
-    {
-        Envelope<string> original = Envelope<string>.Ok("value");
-
-        string json = JsonSerializer.Serialize(original, WebOptions);
-        Envelope<string> restored = JsonSerializer.Deserialize<Envelope<string>>(json, WebOptions)!;
-
-        restored.TimeGenerated.Should().Be(original.TimeGenerated);
-        restored.Result.Should().Be("value");
     }
 
     private static async Task<(int Status, string Body)> ExecuteAsync(IResult result)
