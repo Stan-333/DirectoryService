@@ -1,8 +1,7 @@
 using System.Text.Json;
 using FluentAssertions;
-using Shared.Kernel;
 
-namespace Shared.UnitTests.Kernel;
+namespace Shared.Kernel.Tests;
 
 public class ErrorJsonTests
 {
