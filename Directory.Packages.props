@@ -1,8 +1,10 @@
 <Project>
+  <!-- Версии пакетов для всего монорепо: DirectoryService, Shared и будущие сервисы. -->
   <ItemGroup>
     <!-- ASP.NET / OpenAPI -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.12" />
     <!-- Entity Framework Core -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.12" />
@@ -26,7 +28,8 @@
     <!-- Swagger -->
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
     <!-- Validation / DI -->
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="Scrutor" Version="6.1.0" />
     <!-- Utils -->
     <PackageVersion Include="Dapper" Version="2.1.66" />

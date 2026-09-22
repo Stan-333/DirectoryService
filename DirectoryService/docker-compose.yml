@@ -20,8 +20,9 @@ services:
   directory-service:
     container_name: directory-service
     build:
-      context: .
-      dockerfile: Dockerfile
+      # Корень монорепо: образу нужны общие props-файлы и библиотеки Shared.
+      context: ..
+      dockerfile: DirectoryService/Dockerfile
     restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
