@@ -10,6 +10,9 @@ public static class EndpointExtensions
     /// <summary>
     /// Регистрирует все неабстрактные реализации <see cref="IEndpoint"/> из указанных сборок.
     /// Повторный вызов для тех же сборок не создаёт дубликатов.
+    /// Ошибки привязки параметров minimal API во всех окружениях бросают <c>BadHttpRequestException</c>,
+    /// чтобы <c>ExceptionMiddleware</c> ответил в формате Envelope. Без этого вне Development
+    /// клиент получил бы 400 с пустым телом.
     /// </summary>
     public static IServiceCollection AddEndpoints(this IServiceCollection services, params Assembly[] assemblies)
     {
@@ -20,6 +23,10 @@ public static class EndpointExtensions
             .ToArray();
 
         services.TryAddEnumerable(descriptors);
+
+        // PostConfigure выполняется после всех Configure и перекрывает значение по умолчанию
+        // из AddRouting (true только в Development) независимо от порядка регистрации.
+        services.PostConfigure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 
         return services;
     }
