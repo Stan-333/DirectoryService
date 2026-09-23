@@ -9,16 +9,19 @@ public sealed class DepartmentLocation
 
     public LocationId LocationId { get; private set; }
 
-    public Department Department { get; }
+    // Навигации заполняет EF Core при Include; null! — рекомендация EF Core для обязательных навигаций.
+    public Department Department { get; } = null!;
 
-    public Location Location { get; }
-
-    // EF Core
-    private DepartmentLocation() { }
+    public Location Location { get; } = null!;
 
     public DepartmentLocation(DepartmentId departmentId, LocationId locationId)
     {
         DepartmentId = departmentId;
         LocationId = locationId;
     }
+
+    // EF Core: свойства заполняются при материализации из БД.
+#pragma warning disable CS8618
+    private DepartmentLocation() { }
+#pragma warning restore CS8618
 }

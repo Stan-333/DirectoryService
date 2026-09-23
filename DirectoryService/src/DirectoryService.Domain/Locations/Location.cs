@@ -6,7 +6,9 @@ namespace DirectoryService.Domain.Locations;
 
 public sealed class Location
 {
-    private readonly List<DepartmentLocation> _departmentLocations;
+    // Инициализирована: EF Core добавляет элементы в существующий список,
+    // а локация, загруженная без Include, отдаёт пустой список, а не null.
+    private readonly List<DepartmentLocation> _departmentLocations = [];
 
     public LocationId Id { get; private set; }
 
@@ -26,8 +28,10 @@ public sealed class Location
 
     public IReadOnlyList<DepartmentLocation> DepartmentLocations => _departmentLocations;
 
-    // EF Core
+    // EF Core: свойства заполняются при материализации из БД.
+#pragma warning disable CS8618
     private Location() { }
+#pragma warning restore CS8618
 
     private Location(LocationId id, LocationName name, Address address, TimeZone timezone,
         bool isActive, DateTime createdAt, DateTime updatedAt)
