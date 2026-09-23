@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile:1
+# Строка выше закрепляет актуальный синтаксис Dockerfile независимо от версии Docker:
+# опция env= у RUN --mount=type=secret (ниже) есть только в новых версиях фронтенда BuildKit.
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 USER $APP_UID
 WORKDIR /app
