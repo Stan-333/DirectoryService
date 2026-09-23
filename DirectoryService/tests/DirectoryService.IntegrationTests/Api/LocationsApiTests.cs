@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Contracts.Locations.Requests;
@@ -111,6 +112,59 @@ public class LocationsApiTests : DirectoryBaseTests
         Assert.Equal(1, result.GetProperty("page").GetInt32());
         Assert.Equal(1, result.GetProperty("pageSize").GetInt32());
         Assert.Equal(3, result.GetProperty("totalPages").GetInt64());
+    }
+
+    [Fact]
+    public async Task Get_locations_without_pagination_should_return_first_page_of_default_size()
+    {
+        // Arrange
+        await CreateManyLocationsAsync(3);
+
+        // Act
+        HttpResponseMessage response = await _client.GetAsync("/api/locations");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        JsonElement result = (await EnvelopeJson.ReadAsync(response)).GetProperty("result");
+        Assert.Equal(3, result.GetProperty("items").GetArrayLength());
+        Assert.Equal(1, result.GetProperty("page").GetInt32());
+        Assert.Equal(20, result.GetProperty("pageSize").GetInt32());
+    }
+
+    [Fact]
+    public async Task Post_location_with_broken_json_should_return_bad_request_in_envelope()
+    {
+        // Act
+        HttpResponseMessage response = await _client.PostAsync(
+            "/api/locations",
+            new StringContent("""{"name":""", Encoding.UTF8, "application/json"));
+
+        // Assert
+        // Ошибку привязки модели отдаёт MVC до хендлера — и всё равно в формате Envelope, а не ProblemDetails.
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+        JsonElement envelope = await EnvelopeJson.ReadAsync(response);
+        Assert.True(envelope.GetProperty("isError").GetBoolean());
+        Assert.Contains("value.is.invalid", envelope.ErrorCodes());
+    }
+
+    [Fact]
+    public async Task Post_location_without_required_fields_should_return_field_names()
+    {
+        // Act
+        HttpResponseMessage response = await _client.PostAsync(
+            "/api/locations",
+            new StringContent("{}", Encoding.UTF8, "application/json"));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        JsonElement envelope = await EnvelopeJson.ReadAsync(response);
+        IReadOnlyList<string?> fields = envelope.GetProperty("errorList")
+            .EnumerateArray()
+            .Select(error => error.GetProperty("invalidField").GetString())
+            .ToList();
+        Assert.Contains("Name", fields);
+        Assert.Contains("Timezone", fields);
     }
 
     private static CreateLocationRequest BuildRequest(string name, string house) =>
