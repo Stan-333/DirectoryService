@@ -17,5 +17,11 @@
     <PropertyGroup>
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <EnableStyleCopAnalyzers>true</EnableStyleCopAnalyzers>
+        <!-- Сборка без предупреждений: новое предупреждение сразу ломает сборку, а не копится.
+             Временно отключить при локальной отладке: dotnet build -p:TreatWarningsAsErrors=false -->
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <!-- Уязвимости в пакетах (NuGet Audit) остаются предупреждениями: новое уведомление
+             об уязвимости не должно внезапно ломать сборку без изменений в коде. -->
+        <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
     </PropertyGroup>
 </Project>

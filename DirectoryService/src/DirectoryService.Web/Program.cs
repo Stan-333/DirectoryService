@@ -39,7 +39,7 @@ if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
 });
 
 // Этот middleware обрабатывает все исключения, и его вызываем в самом начале
