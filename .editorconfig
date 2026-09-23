@@ -320,3 +320,8 @@ dotnet_naming_style.private_constants_style.word_separator = _
 dotnet_naming_rule.private_constants_rule.symbols = private_constants
 dotnet_naming_rule.private_constants_rule.style = private_constants_style
 dotnet_naming_rule.private_constants_rule.severity = suggestion
+
+# Миграции EF Core генерирует `dotnet ef migrations add`, вручную их не правят,
+# поэтому анализаторы стиля их не проверяют.
+[**/Migrations/*.cs]
+generated_code = true

@@ -8,7 +8,8 @@ public sealed class Position
 {
     public const int DESCRIPTION_MAX_LENGTH = 1000;
 
-    private readonly List<DepartmentPosition> _departmentPositions;
+    // Инициализирована: должность, загруженная без Include, отдаёт пустой список, а не null.
+    private readonly List<DepartmentPosition> _departmentPositions = [];
 
     public PositionId Id { get; set; }
 
@@ -26,8 +27,10 @@ public sealed class Position
 
     public IReadOnlyList<DepartmentPosition> DepartmentPositions => _departmentPositions;
 
-    // EF Core
+    // EF Core: свойства заполняются при материализации из БД.
+#pragma warning disable CS8618
     private Position() { }
+#pragma warning restore CS8618
 
     private Position(
         PositionId id,

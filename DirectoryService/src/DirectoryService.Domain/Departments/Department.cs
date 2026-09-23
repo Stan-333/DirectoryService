@@ -11,9 +11,11 @@ public sealed class Department
 
     private readonly List<Department> _children = [];
 
-    private List<DepartmentLocation> _locations;
+    // Коллекции навигаций инициализированы: EF Core добавляет элементы в существующий список,
+    // а подразделение, загруженное без Include, отдаёт пустой список, а не null.
+    private readonly List<DepartmentPosition> _positions = [];
 
-    private readonly List<DepartmentPosition> _positions;
+    private List<DepartmentLocation> _locations = [];
 
     public DepartmentId Id { get; private set; }
 
@@ -45,8 +47,10 @@ public sealed class Department
 
     public IReadOnlyList<DepartmentPosition> DepartmentPositions => _positions;
 
-    // EF Core
+    // EF Core: свойства заполняются при материализации из БД.
+#pragma warning disable CS8618
     private Department() { }
+#pragma warning restore CS8618
 
     private Department(
         DepartmentId id,
@@ -71,42 +75,6 @@ public sealed class Department
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         _locations = locations.ToList();
-    }
-
-    public void UpdateLocations(IEnumerable<DepartmentLocation> locations)
-    {
-        _locations = locations.ToList();
-    }
-
-    public void SoftDelete()
-    {
-        IsActive = false;
-        int lastSeparatorIndex = Path.LastIndexOf(PATH_SEPARATOR);
-        Path = Path[..(lastSeparatorIndex + 1)] + "deleted_" + Path[(lastSeparatorIndex + 1)..];
-        DeletedAt = UpdatedAt = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// Обновление родительского подразделения
-    /// </summary>
-    /// <param name="parent">Родительское подразделение.</param>
-    public void UpdateParent(Department? parent)
-    {
-        Parent = parent;
-        if (parent == null)
-        {
-            ParentId = null;
-            Path = Identifier.Value;
-            Depth = 0;
-        }
-        else
-        {
-            ParentId = parent.Id;
-            Path = $"{parent.Path}{PATH_SEPARATOR}{Identifier.Value}";
-            Depth = Convert.ToInt16(parent.Depth + 1);
-        }
-
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public static Result<Department, Error> CreateParent(
@@ -163,5 +131,41 @@ public sealed class Department
             DateTime.UtcNow,
             DateTime.UtcNow,
             departmentLocationList);
+    }
+
+    public void UpdateLocations(IEnumerable<DepartmentLocation> locations)
+    {
+        _locations = locations.ToList();
+    }
+
+    public void SoftDelete()
+    {
+        IsActive = false;
+        int lastSeparatorIndex = Path.LastIndexOf(PATH_SEPARATOR);
+        Path = Path[..(lastSeparatorIndex + 1)] + "deleted_" + Path[(lastSeparatorIndex + 1)..];
+        DeletedAt = UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Обновление родительского подразделения
+    /// </summary>
+    /// <param name="parent">Родительское подразделение.</param>
+    public void UpdateParent(Department? parent)
+    {
+        Parent = parent;
+        if (parent == null)
+        {
+            ParentId = null;
+            Path = Identifier.Value;
+            Depth = 0;
+        }
+        else
+        {
+            ParentId = parent.Id;
+            Path = $"{parent.Path}{PATH_SEPARATOR}{Identifier.Value}";
+            Depth = Convert.ToInt16(parent.Depth + 1);
+        }
+
+        UpdatedAt = DateTime.UtcNow;
     }
 }

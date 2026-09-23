@@ -32,17 +32,6 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
                 .IsUnique();
         });
 
-        // builder.Property(l => l.Name)
-        //     .IsRequired()
-        //     .HasMaxLength(LocationName.NAME_MAX_LENGTH)
-        //     .HasColumnName("location_name")
-        //     .HasConversion(locName => locName.Value, x => LocationName.Create(x).Value);
-
-        // builder.HasIndex(l => l.Name.Value)
-        //     .HasDatabaseName("idx_location_name")
-        //     .HasFilter("is_active = true")
-        //     .IsUnique();
-
         builder.ComplexProperty(l => l.Address, ab =>
         {
             ab.Property(a => a.PostalCode)

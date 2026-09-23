@@ -19,8 +19,10 @@ public record Address
 
     public string? Apartment { get; }
 
-    // EF Core
+    // EF Core: свойства заполняются при материализации из БД.
+#pragma warning disable CS8618
     private Address() { }
+#pragma warning restore CS8618
 
     private Address(string postalCode, string region, string city, string street, string house, string? apartment)
     {
