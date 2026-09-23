@@ -34,6 +34,23 @@ public class DepartmentsApiTests : DirectoryBaseTests
     }
 
     [Fact]
+    public async Task Get_roots_and_top_positions_without_query_parameters_should_use_defaults()
+    {
+        // Arrange
+        LocationId locationId = await CreateLocationAsync();
+        Guid departmentId = await CreateDepartmentAsync("Головной офис", "head_office", null, locationId);
+
+        // Act
+        HttpResponseMessage roots = await _client.GetAsync("/api/departments/roots");
+        HttpResponseMessage top = await _client.GetAsync("/api/departments/top-positions");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, roots.StatusCode);
+        Assert.Contains(departmentId, DepartmentIds(await EnvelopeJson.ReadAsync(roots)));
+        Assert.Equal(HttpStatusCode.OK, top.StatusCode);
+    }
+
+    [Fact]
     public async Task Post_department_with_unknown_location_should_return_not_found()
     {
         // Arrange

@@ -1,6 +1,7 @@
 using DirectoryService.Application;
 using DirectoryService.Infrastructure;
 using Shared.Framework.Swagger;
+using Shared.Framework.Validation;
 
 namespace DirectoryService.Web;
 
@@ -16,7 +17,8 @@ public static class DependencyInjection
 
     private static IServiceCollection AddWebDependencies(this IServiceCollection services)
     {
-        services.AddControllers();
+        // Ошибки привязки модели (битый JSON, неверный формат, нет обязательного поля) — тоже в формате Envelope.
+        services.AddControllers().AddEnvelopeValidationResponses();
 
         services.AddOpenApiSpec("DirectoryService", "v1");
 

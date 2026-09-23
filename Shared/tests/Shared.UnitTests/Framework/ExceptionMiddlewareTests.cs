@@ -42,6 +42,20 @@ public class ExceptionMiddlewareTests
     }
 
     [Fact]
+    public async Task Bad_http_request_is_client_error_with_status_of_exception()
+    {
+        DefaultHttpContext context = CreateContext();
+        var middleware = CreateMiddleware(_ => throw new BadHttpRequestException("Request body too large", StatusCodes.Status413PayloadTooLarge));
+
+        await middleware.InvokeAsync(context);
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status413PayloadTooLarge);
+        Error error = ReadEnvelope(context).ErrorList.Should().ContainSingle().Subject;
+        error.Code.Should().Be("request.is.invalid");
+        error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
     public async Task Partially_written_response_is_replaced_with_error()
     {
         DefaultHttpContext context = CreateContext();

@@ -12,6 +12,7 @@ on:
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'global.json'
+      - 'nuget.config'
       - '.editorconfig'
       - '.github/workflows/shared-kernel.yml'
   workflow_dispatch:
@@ -44,6 +45,9 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Полная история нужна, чтобы проверить, что тег релиза стоит на коммите из main.
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -59,9 +63,15 @@ jobs:
         id: version
         run: |
           version=$(dotnet msbuild Shared/src/Shared.Kernel/Shared.Kernel.csproj -getProperty:Version)
-          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "v$version" ]]; then
-            echo "::error::Тег $GITHUB_REF_NAME не совпадает с <Version>$version</Version> в Shared.Kernel.csproj"
-            exit 1
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+              echo "::error::Тег $GITHUB_REF_NAME не совпадает с <Version>$version</Version> в Shared.Kernel.csproj"
+              exit 1
+            fi
+            if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+              echo "::error::Тег $GITHUB_REF_NAME стоит на коммите, которого нет в main: релиз выпускается только из main"
+              exit 1
+            fi
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 

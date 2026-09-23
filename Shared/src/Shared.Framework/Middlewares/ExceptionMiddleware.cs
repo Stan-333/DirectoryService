@@ -9,8 +9,10 @@ namespace Shared.Framework.Middlewares;
 
 /// <summary>
 /// Перехватывает необработанные исключения и отвечает в формате <see cref="Envelope"/>.
-/// Для <see cref="AppException"/> статус берётся из типов её ошибок. Любое другое исключение
-/// превращается в 500 без подробностей для клиента, а подробности уходят в лог.
+/// Для <see cref="AppException"/> статус берётся из типов её ошибок. <see cref="BadHttpRequestException"/>
+/// (битое тело запроса, ошибка привязки параметров minimal API, слишком большой запрос) — ошибка клиента,
+/// статус берётся из исключения. Любое другое исключение превращается в 500 без подробностей для клиента,
+/// а подробности уходят в лог.
 /// </summary>
 public class ExceptionMiddleware
 {
@@ -59,6 +61,9 @@ public class ExceptionMiddleware
         (int statusCode, Errors errors) = exception switch
         {
             AppException appException => (ErrorStatusCodes.FromErrors(appException.Errors), appException.Errors),
+            BadHttpRequestException badRequest => (
+                badRequest.StatusCode,
+                Error.Validation("request.is.invalid", "Запрос имеет неверный формат").ToErrors()),
             _ => (StatusCodes.Status500InternalServerError, GeneralErrors.Failure().ToErrors()),
         };
 

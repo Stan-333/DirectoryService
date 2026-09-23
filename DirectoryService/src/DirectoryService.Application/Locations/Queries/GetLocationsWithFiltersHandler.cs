@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts;
 using DirectoryService.Contracts.Locations;
+using DirectoryService.Contracts.Locations.Requests;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
@@ -60,8 +61,9 @@ public class GetLocationsWithFiltersHandler : IQueryHandler<PagedResult<GetLocat
 
         // PaginationRequest уже нормализует значения, но через object initializer их можно обойти,
         // а PagedResult принимает только page >= 1 и pageSize >= 1.
-        int pageSize = PaginationConstraints.NormalizePageSize(query.Request.Pagination.PageSize);
-        int page = PaginationConstraints.NormalizePage(query.Request.Pagination.Page, pageSize);
+        PaginationRequest pagination = query.Request.Pagination ?? new PaginationRequest();
+        int pageSize = PaginationConstraints.NormalizePageSize(pagination.PageSize);
+        int page = PaginationConstraints.NormalizePage(pagination.Page, pageSize);
         int offset = PaginationConstraints.CalculateOffset(page, pageSize);
 
         locationsQuery = locationsQuery
